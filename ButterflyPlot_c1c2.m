@@ -29,7 +29,7 @@ if(exist('curve2'))
     f2 = @(u,x)distanceFunc([u,x],curve2);
 end
 
-% Obtain anhysteresis curves 
+% Obtain anhysteresis curve 
 if(exist('curve1') && exist('curve2'))
     duhemModel = DuhemModel(f1,f2); % Create duhem model
     [anHystCurves, avgHystCurves] = ...
@@ -39,11 +39,11 @@ if(exist('curve1') && exist('curve2'))
             'DisplayName','f_1-f_2=0'); hold on;
         if(i>1) set(lineHandler,'handleVisibility','off'); end
     end
-    for i=1:size(avgHystCurves,2) % Plot average curve
-        lineHandler = plot(axHandler,avgHystCurves{i}(:,1),avgHystCurves{i}(:,2),'m',...
-            'DisplayName','f_1+f_2=0'); hold on;
-        if(i>1) set(lineHandler,'handleVisibility','off'); end
-    end
+%     for i=1:size(avgHystCurves,2) % Plot average curve
+%         lineHandler = plot(axHandler,avgHystCurves{i}(:,1),avgHystCurves{i}(:,2),'m',...
+%             'DisplayName','f_1+f_2=0'); hold on;
+%         if(i>1) set(lineHandler,'handleVisibility','off'); end
+%     end
 end
 
 % Show legends

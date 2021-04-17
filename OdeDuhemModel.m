@@ -46,28 +46,46 @@ duhemModel = DuhemModel(f1,f2);
 % Create plot paramters and obtain anhysteresis curves
 hPad = 0.1; vPad = 0.1; 
 minHPad = 0.1; minVPad = 0.1; 
-autoAdjust = false;
+autoAdjust = true;
 % hGridSize = 500; hLims = [-1.0 1.0]*1; 
 % vGridSize = 500; vLims = [-1 5]*1;
 % hGridSize = 500; hLims = [-1.0 1.0]*1; 
 % vGridSize = 500; vLims = [-1.0 1.0]*1;
 % hGridSize = 500; hLims = [-1.0 1.0]*5.0; 
 % vGridSize = 500; vLims = [-8.0 10.0]*1.0;
-hGridSize = 500; hLims = [-1.0 1.0]*13.0; 
-vGridSize = 500; vLims = [-14.0 11.0]*1.0;
+% hGridSize = 500; hLims = [-1.0 1.0]*13.0; 
+% vGridSize = 500; vLims = [-14.0 11.0]*1.0;
+% hGridSize = 500; hLims = [-1.0 1.0]*5.0;  
+% vGridSize = 500; vLims = [-11.0 6.0]*1.0;
+% hGridSize = 800; hLims = [-1.0 1.0]*10; 
+% vGridSize = 800; vLims = [-1.0 1.0]*10;
+hGridSize = 800; hLims = [min([curve1(:,1);curve2(:,1)]),...
+                                max([curve1(:,1);curve2(:,1)])];
+vGridSize = 800; vLims = [min([curve1(:,2);curve2(:,2)]),...
+                                max([curve1(:,2);curve2(:,2)])];
 hRange = hLims(2)-hLims(1); vRange = vLims(2)-vLims(1);
+% [anHystCurves, avgHystCurves] = ...
+%     DuhemModel.findAnhysteresisCurve(duhemModel,...
+%     [hLims(1)-hRange*hPad, hLims(2)+hRange*hPad],hGridSize,...
+%     [vLims(1)-vRange*vPad, vLims(2)+vRange*vPad],vGridSize);
 [anHystCurves, avgHystCurves] = ...
     DuhemModel.findAnhysteresisCurve(duhemModel,...
-    [hLims(1)-hRange*hPad, hLims(2)+hRange*hPad],...
-    hGridSize,...
-    [vLims(1)-vRange*vPad, vLims(2)+vRange*vPad],...
-    vGridSize);
+    [hLims(1), hLims(2)],hGridSize,...
+    [vLims(1), vLims(2)],vGridSize);
 figure; axHandler = axes(); hold on; % Create axes
+if(exist('curve1'))% Plot level f1=0
+    plot(axHandler,curve1(:,1),curve1(:,2),'r',...
+        'DisplayName','$c_1(\upsilon)$'); hold on;
+end
+if(exist('curve2'))% Plot level f2=0
+    plot(axHandler,curve2(:,1),curve2(:,2),'b',...
+        'DisplayName','$c_2(\upsilon)$'); hold on;
+end
 for i=1:size(anHystCurves,2) % Plot anhysteresis curve
     lineHandler = plot(axHandler,...
         anHystCurves{i}(:,1),anHystCurves{i}(:,2),...
         'Color','k',...
-        'LineWidth',1.2,...
+        'LineWidth',1.0,...
         'LineStyle','--',...
         'DisplayName','Anhysteresis curve $\mathcal{A}$'); hold on;
     if(i>1) set(lineHandler,'handleVisibility','on'); end
@@ -79,29 +97,26 @@ end
 %         'DisplayName','f_1+f_2=0'); hold on;
 %     if(i>1) set(lineHandler,'handleVisibility','off'); end
 % end
-if(exist('curve1'))% Plot level f1=0
-    plot(axHandler,curve1(:,1),curve1(:,2),'r','DisplayName','$c_1(\upsilon)$'); hold on;
-end
-if(exist('curve2'))% Plot level f2=0
-    plot(axHandler,curve2(:,1),curve2(:,2),'b','DisplayName','$c_2(\upsilon)$'); hold on;
-end
 axis([hLims(1)-hRange*hPad,hLims(2)+hRange*hPad,...
       vLims(1)-vRange*vPad,vLims(2)+vRange*vPad]);
 
 %%  Input creation
 
 % Simulation parameters for periodic input
-samplesPerCycle = 500; 
+samplesPerCycle = 1000; 
 cycles = 3;
-uMin = -12; 
-uMax =  12;
-x0 = -10.0; 
+uMin = -10; 
+uMax =  10;
+x0 = -5.0;
+% uMin = -5; 
+% uMax =  5;
+% x0 = dataHandler.outputSeq(1);
 t0 = 0; tend = 5*cycles;
 uVec = [];
 for i=1:cycles
-%     uVec = [uVec;linspace(uMax,uMin,samplesPerCycle)'];
-    uVec = [uVec;linspace(uMin,uMax,samplesPerCycle)'];
     uVec = [uVec;linspace(uMax,uMin,samplesPerCycle)'];
+    uVec = [uVec;linspace(uMin,uMax,samplesPerCycle)'];
+%     uVec = [uVec;linspace(uMax,uMin,samplesPerCycle)'];
 end
 tVec = linspace(t0,tend,2*samplesPerCycle*cycles)';
 duVec = [0;diff(uVec)./diff(tVec)];
@@ -125,8 +140,9 @@ duVec = [0;diff(uVec)./diff(tVec)];
 % if (exist('anLineHand')); clearpoints(anLineHand); end;
 anLineHand = animatedline(axHandler,...
     'LineWidth',1.2,...
-    'Color','k',...
-    'HandleVisibility','off');
+    'Color','k',...,
+    'DisplayName','Duhem model',...
+    'HandleVisibility','on');
 odeOutFunc = @(tq,xq,flag)odeDrawing(...
     tq,xq,flag,...
     tVec,uVec,duVec,...
@@ -153,6 +169,11 @@ leg = legend(...
 %     'Location','northeast');
 xlabel('$u$','Interpreter','latex');
 ylabel('$y$','Interpreter','latex');
+
+% dataHandler = DataHandler(uVec,xTime);
+plot(axHandler,dataHandler.inputSeq,dataHandler.outputSeq,'g',...
+    'lineWidth',1.2,...
+    'DisplayName','Data');
 
 %% Ode plotting functions
 
