@@ -22,8 +22,8 @@ ylim([yMin-yRange*yPad yMax+yRange*yPad]);
     DuhemModel.computef1f2InMesh(duhemModel,[uMin,uMax],uGridSize,[yMin,yMax],yGridSize);
 
 % Plots f1 and level set f1=0
-surf(U,Y,f1,'edgecolor','none'); hold on;
-plot3(curve1(:,1),curve1(:,2),zeros(size(curve1,1),1),'r');
+% surf(U,Y,f1,'edgecolor','none'); hold on;
+% plot3(curve1(:,1),curve1(:,2),zeros(size(curve1,1),1),'r');
 
 % Plots f2 and levelset f2=0
 % surf(U,Y,f2,'edgecolor','none'); hold on;
@@ -36,11 +36,11 @@ plot3(curve1(:,1),curve1(:,2),zeros(size(curve1,1),1),'r');
     DuhemModel.findAnhysteresisCurve(duhemModel,[uMin,uMax],uGridSize,[yMin,yMax],yGridSize);
 
 % Plots level set f1-f2=0
-for i=1:size(anHystCurves,2)
-    plot3(anHystCurves{i}(:,1),anHystCurves{i}(:,2),...
-        zeros(size(anHystCurves{i},1)),'k');
-end
-surf(U,Y,f1-f2,'edgecolor','none'); hold on;
+% for i=1:size(anHystCurves,2)
+%     plot3(anHystCurves{i}(:,1),anHystCurves{i}(:,2),...
+%         zeros(size(anHystCurves{i},1)),'k');
+% end
+% surf(U,Y,f1-f2,'edgecolor','none'); hold on;
 
 % Plots level set f1+f2=0
 % for i=1:size(avgHystCurve,2)

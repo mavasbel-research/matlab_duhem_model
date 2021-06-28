@@ -90,22 +90,22 @@ clc
 % Lines + sines
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-yWidth = 50;
-xWidth = 50;
-xyCenter = [0, 0];
-
-evalLim = [-50,50];
-samples = 500;
-
-slope = 0.75; shift = 0.5; amp=3; freq=0.075;
-uVals = linspace(evalLim(1),evalLim(2),samples)';
-yVals = uVals*slope+shift + amp*sin(2*pi*freq*uVals);
-curve1 = [uVals,yVals];
-
-slope = -0.75; shift = 0; amp=-3; freq=0.075;
-uVals = linspace(evalLim(1),evalLim(2),samples)';
-yVals = uVals*slope+shift + amp*sin(2*pi*freq*uVals);
-curve2 = [uVals,yVals];
+% yWidth = 50;
+% xWidth = 50;
+% xyCenter = [0, 0];
+% 
+% evalLim = [-50,50];
+% samples = 500;
+% 
+% slope = 0.75; shift = 0.5; amp=3; freq=0.075;
+% uVals = linspace(evalLim(1),evalLim(2),samples)';
+% yVals = uVals*slope+shift + amp*sin(2*pi*freq*uVals);
+% curve1 = [uVals,yVals];
+% 
+% slope = -0.75; shift = 0; amp=-3; freq=0.075;
+% uVals = linspace(evalLim(1),evalLim(2),samples)';
+% yVals = uVals*slope+shift + amp*sin(2*pi*freq*uVals);
+% curve2 = [uVals,yVals];
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % Lines experiment

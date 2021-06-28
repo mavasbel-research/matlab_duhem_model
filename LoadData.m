@@ -34,7 +34,7 @@ skipFilter = '';
 % skipFilter = '.*(uni).*';
 
 % CDC 2020
-fitMatchFilter = 'PNZT_x0.47_.*x3.*1400V';
+% fitMatchFilter = 'PNZT_x0.47_.*x3.*1400V';
 
 % Anja's plot
 % fitMatchFilter = 'PNZT_x0.47_.*x3.*1200V';
@@ -52,7 +52,7 @@ fitMatchFilter = 'PNZT_x0.47_.*x3.*1400V';
 % fitMatchFilter = 'PNZT_x0.47_.*x3.*1400V';
 % fitMatchFilter = 'PNZT_x0.47_.*x3.*';
 % fitMatchFilter = 'PNZT_x0.465_.*difV.*1600V';
-% fitMatchFilter = 'PNZT_x0.465_.*x3.*1400V';
+fitMatchFilter = 'PNZT_x0.465_.*x3.*1400V';
 % fitMatchFilter = 'PNZT_x0.465_.*x3.*';
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%

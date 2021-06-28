@@ -31,13 +31,13 @@ uRange = uMax-uMin;
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % Fitting parameters
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-f1PolyDeg = 11;
-f2PolyDeg = 11;
-f1RegTerm = 0.1*eye(f1PolyDeg+1);
-f2RegTerm = 0.1*eye(f2PolyDeg+1);
+f1PolyDeg = 9;
+f2PolyDeg = 9;
+f1RegTerm = 0.0*eye(f1PolyDeg+1);
+f2RegTerm = 0.0*eye(f2PolyDeg+1);
 fminconOptions = optimoptions('fmincon',...
                     'Algorithm','active-set',...
-                    'StepTolerance',1.0000e-10,...
+                    'StepTolerance',1.0000e-12,...
                     'FunctionTolerance',1.0000e-100,...
                     'UseParallel',true,...
                     'FiniteDifferenceType','central',...
@@ -59,7 +59,9 @@ f1IntYVec = [];
 % idx1 = 4000;
 % idx0 = dataHandler.minInputPeakIdx;
 % idx1 = dataHandler.sampleLength;
-idx0 = 98;
+% idx0 = 98;
+% idx1 = 169;
+idx0 = 99;
 idx1 = 169;
 for idx=idx0+1:idx1
     f1IntURow = buildUMatRow(dataHandler.inputSeq(idx0:idx),f1PolyDeg);
@@ -76,8 +78,8 @@ objFunc1 = @(regressor)...
                     ).^2 ...
                 ) + sum( (f1RegTerm*regressor(:)).^2 ) ;
 % f1Regressor = zeros(f1PolyDeg+1,1);  
-% f1Regressor = (rand(f1PolyDeg+1,1)-0.5)*1;
-% f1Regressor = ones(f1PolyDeg+1,1)*0.01;
+% f1Regressor = 1.0*(rand(f1PolyDeg+1,1)-0.5);
+% f1Regressor = 1.0*ones(f1PolyDeg+1,1);
 % f1Regressor = fmincon(objFunc1,f1Regressor,[],[],[],[],[],[],[],...
 %             fminconOptions);
 % error1 = objFunc1(f1Regressor)
@@ -101,8 +103,10 @@ f2IntYVec = [];
 % idx1 = 3000;
 % idx0 = 1;
 % idx1 = dataHandler.minInputPeakIdx;
+% idx0 = 169;
+% idx1 = 234;
 idx0 = 169;
-idx1 = 234;
+idx1 = 233;
 for idx=idx0+1:idx1
     f2IntURow = buildUMatRow(dataHandler.inputSeq(idx0:idx),f2PolyDeg);
     f2IntYdes = trapz(dataHandler.inputSeq(idx0:idx),...
@@ -118,8 +122,8 @@ objFunc2 = @(regressor)...
                     ).^2 ...
                 ) + sum( (f2RegTerm*regressor(:)).^2 ) ;
 % f2Regressor = zeros(f2PolyDeg+1,1);  
-% f2Regressor = (rand(f2PolyDeg+1,1)-0.5)*1;
-% f2Regressor = ones(f2PolyDeg+1,1)*0.01;
+% f2Regressor = 1.0*(rand(f2PolyDeg+1,1)-0.5);
+% f2Regressor = 1.0*ones(f2PolyDeg+1,1)*0.5;
 % f2Regressor = fmincon(objFunc2,f2Regressor,[],[],[],[],[],[],[],...
 %             fminconOptions);
 % error2 = objFunc2(f2Regressor)
@@ -175,8 +179,13 @@ duhemModel = DuhemModel(f1,f2); % Create duhem model
 [anHystCurves, avgHystCurves] = ...
     DuhemModel.findAnhysteresisCurve(duhemModel,[uMin,uMax],uGridSize,[yMin,yMax],yGridSize);
 for i=1:size(anHystCurves,2) % Plot anhysteresis curve
-    lineHandler = plot(axHandler,anHystCurves{i}(:,1),anHystCurves{i}(:,2),'k',...
-        'DisplayName','$f_1-f_2=0$'); hold on;
+    lineHandler = plot(axHandler,...
+        anHystCurves{i}(:,1),anHystCurves{i}(:,2),...
+        'Color','k',...
+        'LineWidth',1.0,...
+        'LineStyle','--',...
+        'DisplayName','Anhysteresis curve $\mathcal{A}$'); hold on;
+%         'DisplayName','$f_1-f_2=0$' ); hold on;
     if(i>1) set(lineHandler,'handleVisibility','off'); end
 end
 
