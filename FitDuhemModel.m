@@ -19,7 +19,7 @@ dataHandler.normalizeOutput(scaleOutput);
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 uGridSize = 800;
 yGridSize = 800;
-uPad = 0.2; 
+uPad = 0.1; 
 yPad = 0.2;
 uMin = dataHandler.inputMin;
 uMax = dataHandler.inputMax;
@@ -162,17 +162,21 @@ figure();
 axHandler = axes(); hold on;
 plot(axHandler,dataHandler.inputSeq,dataHandler.outputSeq,'g',...
     'lineWidth',1.2,...
-    'DisplayName','Data');
+    'DisplayName','Experimental Data');
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % Plot Anhysteresis function
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 distanceFunc = @ButterflyUtils.verticalDistance;
 
-plot(axHandler,curve1(:,1),curve1(:,2),'r','DisplayName','$f_1=0$'); hold on;
+plot(axHandler,curve1(:,1),curve1(:,2),...
+    'r','DisplayName','$f_1(u,y)=0$',...
+    'LineWidth',1.2); hold on;
 f1 = @(u,x)-distanceFunc([u,x],curve1);
 
-plot(axHandler,curve2(:,1),curve2(:,2),'b','DisplayName','$f_2=0$'); hold on;
+plot(axHandler,curve2(:,1),curve2(:,2),'b',...
+    'DisplayName','$f_2(u,y)=0$',...
+    'LineWidth',1.2); hold on;
 f2 = @(u,x)distanceFunc([u,x],curve2);
 
 duhemModel = DuhemModel(f1,f2); % Create duhem model
@@ -182,7 +186,7 @@ for i=1:size(anHystCurves,2) % Plot anhysteresis curve
     lineHandler = plot(axHandler,...
         anHystCurves{i}(:,1),anHystCurves{i}(:,2),...
         'Color','k',...
-        'LineWidth',1.0,...
+        'LineWidth',1.2,...
         'LineStyle','--',...
         'DisplayName','Anhysteresis curve $\mathcal{A}$'); hold on;
 %         'DisplayName','$f_1-f_2=0$' ); hold on;
@@ -194,9 +198,12 @@ end
 xlim([uMin-uRange*uPad uMax+uRange*uPad]);
 ylim([yMin-yRange*yPad yMax+yRange*yPad]);
 
+% leg = legend(...
+%     'Interpreter','latex',...
+%     'Location','southeast');
 leg = legend(...
     'Interpreter','latex',...
-    'Location','southeast');
+    'Location','northeast');
 xlabel('$u$','Interpreter','latex');
 ylabel('$y$','Interpreter','latex');
 

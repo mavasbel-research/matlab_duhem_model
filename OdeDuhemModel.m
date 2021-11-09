@@ -5,7 +5,7 @@ clc
 
 %% Create model global parameters
 % Dahl parameters
-% dh_rho = 1;
+% dh_rho = 2;
 % dh_Fc = 0.25;
 % dh_r = 3/7;
 % f1 = @(u,x) dh_rho*(abs(1-x/dh_Fc)^dh_r)*sign(1-x/dh_Fc);
@@ -26,17 +26,17 @@ clc
 % bw_n = 3;
 % bw_eta = 1;
 
-% bw_alpha = 1.0;
-% bw_beta = 2.0;
-% bw_zeta = 0.1;
-% bw_n = 3;
-% bw_eta = 0.1;
+bw_alpha = 10.0;
+bw_beta = 2.0;
+bw_zeta = -1;
+bw_n = 3;
+bw_eta = 0.1;
 
-% (bw_alpha/(bw_beta+bw_zeta))^bw_n
-% (bw_alpha/(bw_beta-bw_zeta))^bw_n
+(bw_alpha/(bw_beta+bw_zeta))^bw_n
+(bw_alpha/(bw_beta-bw_zeta))^bw_n
 
-% f1 = @(u,x) bw_eta*(bw_alpha - bw_beta*abs(x)^bw_n - bw_zeta*x*abs(x)^(bw_n-1));
-% f2 = @(u,x) bw_eta*(bw_alpha - bw_beta*abs(x)^bw_n + bw_zeta*x*abs(x)^(bw_n-1));
+f1 = @(u,x) bw_eta*(bw_alpha - bw_beta*abs(x)^bw_n - bw_zeta*x*abs(x)^(bw_n-1));
+f2 = @(u,x) bw_eta*(bw_alpha - bw_beta*abs(x)^bw_n + bw_zeta*x*abs(x)^(bw_n-1));
 
 % Create model
 duhemModel = DuhemModel(f1,f2);
@@ -46,19 +46,19 @@ duhemModel = DuhemModel(f1,f2);
 % Create plot paramters and obtain anhysteresis curves
 hPad = 0.1; vPad = 0.1; 
 minHPad = 0.1; minVPad = 0.1; 
-autoAdjust = false;
+autoAdjust = true;
 % hGridSize = 500; hLims = [-1.0 1.0]*1; 
 % vGridSize = 500; vLims = [-1 5]*1;
-% hGridSize = 500; hLims = [-1.0 1.0]*1; 
-% vGridSize = 500; vLims = [-1.0 1.0]*1;
+hGridSize = 500; hLims = [-1.0 1.0]*1; 
+vGridSize = 500; vLims = [-1.0 1.0]*1;
 % hGridSize = 500; hLims = [-1.0 1.0]*5.0; 
 % vGridSize = 500; vLims = [-8.0 10.0]*1.0;
 % hGridSize = 500; hLims = [-1.0 1.0]*13.0; 
-% vGridSize = 500; vLims = [-14.0 11.0]*1.0;
+% vGridSize = 500; vLims = [-15.0 11.0]*1.0;
 % hGridSize = 500; hLims = [-1.0 1.0]*5.0;  
 % vGridSize = 500; vLims = [-11.0 6.0]*1.0;
-hGridSize = 800; hLims = [-1.0 1.0]*10; 
-vGridSize = 800; vLims = [-5.0 12.0]*1;
+% hGridSize = 800; hLims = [-1.0 1.0]*10; 
+% vGridSize = 800; vLims = [-5.0 12.0]*1;
 % hGridSize = 800; hLims = [min([curve1(:,1);curve2(:,1)]),...
 %                                 max([curve1(:,1);curve2(:,1)])];
 % vGridSize = 800; vLims = [min([curve1(:,2);curve2(:,2)]),...
@@ -73,23 +73,25 @@ hRange = hLims(2)-hLims(1); vRange = vLims(2)-vLims(1);
     [hLims(1), hLims(2)],hGridSize,...
     [vLims(1), vLims(2)],vGridSize);
 figure; axHandler = axes(); hold on; % Create axes
-if(exist('curve1'))% Plot level f1=0
+if(exist('curve1','var'))% Plot level f1=0
     plot(axHandler,curve1(:,1),curve1(:,2),'r',...
         'DisplayName','$c_1(\upsilon)$'); hold on;
 end
-if(exist('curve2'))% Plot level f2=0
+if(exist('curve2','var'))% Plot level f2=0
     plot(axHandler,curve2(:,1),curve2(:,2),'b',...
         'DisplayName','$c_2(\upsilon)$'); hold on;
 end
-for i=1:size(anHystCurves,2) % Plot anhysteresis curve
-    lineHandler = plot(axHandler,...
-        anHystCurves{i}(:,1),anHystCurves{i}(:,2),...
-        'Color','k',...
-        'LineWidth',1.0,...
-        'LineStyle','--',...
-        'DisplayName','Anhysteresis curve $\mathcal{A}$'); hold on;
-    if(i>1) set(lineHandler,'handleVisibility','off'); end
-end
+
+% for i=1:size(anHystCurves,2) % Plot anhysteresis curve
+%     lineHandler = plot(axHandler,...
+%         anHystCurves{i}(:,1),anHystCurves{i}(:,2),...
+%         'Color','k',...
+%         'LineWidth',1.0,...
+%         'LineStyle','--',...
+%         'DisplayName','Anhysteresis curve $\mathcal{A}$'); hold on;
+%     if(i>1) set(lineHandler,'handleVisibility','off'); end
+% end
+
 % for i=1:size(avgHystCurves,2) % Plot average curve
 %     lineHandler = plot(axHandler,...
 %         avgHystCurves{i}(:,1),avgHystCurves{i}(:,2),...
@@ -97,11 +99,11 @@ end
 %         'DisplayName','f_1+f_2=0'); hold on;
 %     if(i>1) set(lineHandler,'handleVisibility','off'); end
 % end
-if(exist('dataHandler'))
+if(exist('dataHandler','var'))
 %     dataHandler = DataHandler(uVec,xTime);
     plot(axHandler,dataHandler.inputSeq,dataHandler.outputSeq,'g',...
         'lineWidth',1.2,...
-        'DisplayName','Data');
+        'DisplayName','Experimental Data');
 end
 axis([hLims(1)-hRange*hPad,hLims(2)+hRange*hPad,...
       vLims(1)-vRange*vPad,vLims(2)+vRange*vPad]);
@@ -113,12 +115,15 @@ ylabel('$y$','Interpreter','latex');
 % Simulation parameters for periodic input
 samplesPerCycle = 1000; 
 cycles = 3;
-uMin = -8; 
-uMax =  8;
-x0 = 0.0;
-% uMin = -5; 
-% uMax =  5;
+% uMin = -12; 
+% uMax =  12;
+% x0 = 0.5;
+% uMin = -1; 
+% uMax =  1;
 % x0 = dataHandler.outputSeq(1);
+% uMin = -10; 
+% uMax =  10;
+% 
 t0 = 0; tend = 5*cycles;
 uVec = [];
 for i=1:cycles
@@ -135,6 +140,7 @@ duVec = [0;diff(uVec)./diff(tVec)];
 % t0 = 0; tend = 20;
 % x0 = 0;
 % peaks = [-3 2.8 -2.6 2.4 -2.2 2.0 -1.8 1.6 -1.4];
+% peaks = [0 10 0 -10 0 8 0 -8 0 5 0 -5 0 3 0 -3 0];
 % uVec = [];
 % for i=1:length(peaks)-1
 %     uVec = [uVec;linspace(peaks(i),peaks(i+1),samples)'];
@@ -146,7 +152,7 @@ duVec = [0;diff(uVec)./diff(tVec)];
 %% Simulation ode
 
 % Create animated plot handlers and invoke ode
-% if (exist('anLineHand')); clearpoints(anLineHand); end;
+% if (exist('anLineHand','var')); clearpoints(anLineHand); end;
 anLineHand = animatedline(axHandler,...
     'LineWidth',1.2,...
     'Color','k',...,
@@ -169,13 +175,23 @@ odeOutFunc = @(tq,xq,flag)odeDrawing(...
         'MaxStep',10,...
         'Stats','on'));
 
+% Mark initial and final
+plot(uVec(1),xTime(1),'o',...
+    'Color','k',...
+    'LineWidth',1.2,...
+    'HandleVisibility','off');
+% plot(uVec(end),xTime(end),'x',...
+%     'Color','k',...
+%     'LineWidth',1.2,...
+%     'HandleVisibility','off');
+
 % Adjust plot
-leg = legend(...
-    'Interpreter','latex',...
-    'Location','southeast');
 % leg = legend(...
 %     'Interpreter','latex',...
-%     'Location','northeast');
+%     'Location','southeast');
+leg = legend(...
+    'Interpreter','latex',...
+    'Location','northeast');
 
 %% Ode plotting functions
 

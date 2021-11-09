@@ -153,20 +153,20 @@ clc
 % Butterfly cubic polynomial paper 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-% yWidth = 20;
-% xWidth = 30;
-% xyCenter = [0, 0];
-% 
-% evalLim = [-15,15];
-% samples = 2000;
-% 
-% uVals = linspace(evalLim(1),evalLim(2),samples)';
-% yVals = 0.1*uVals.^3 + 0.1*uVals + 1.0;
-% curve1 = [uVals,yVals];
-% 
-% uVals = linspace(evalLim(1),evalLim(2),samples)';
-% yVals = - 0.1*uVals.^3 - 0.1*uVals - 1.0;
-% curve2 = [uVals,yVals];
+yWidth = 20;
+xWidth = 30;
+xyCenter = [0, 0];
+
+evalLim = [-15,15];
+samples = 2000;
+
+uVals = linspace(evalLim(1),evalLim(2),samples)';
+yVals = 0.1*uVals.^3 + 0.1*uVals + 1.0;
+curve1 = [uVals,yVals];
+
+uVals = linspace(evalLim(1),evalLim(2),samples)';
+yVals = - 0.1*uVals.^3 - 0.1*uVals - 1.0;
+curve2 = [uVals,yVals];
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % Butterfly cubic polynomial negative paper 

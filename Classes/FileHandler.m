@@ -61,7 +61,7 @@ classdef FileHandler < handle
         end
         
         %Creates a data handler with the found file
-        function dataHandler = getDataHandler(obj)
+        function dataHandler = getStrainDataHandler(obj)
             if(~isempty(obj.dataHandler))
                 dataHandler = obj.dataHandler;
                 return;
@@ -73,7 +73,25 @@ classdef FileHandler < handle
                 [header, matrix] = obj.readDat();
             end
 
-            [origTime, origInputSeq, origOutputSeq] = obj.getInputOutput(header, matrix);
+            [origTime, origInputSeq, origOutputSeq] = obj.getInputOutputStrain(header, matrix);
+            obj.dataHandler = DataHandler(origInputSeq, origOutputSeq, origTime);
+            dataHandler = obj.dataHandler;
+        end
+        
+        %Creates a data handler with the found file
+        function dataHandler = getPolarizationDataHandler(obj)
+            if(~isempty(obj.dataHandler))
+                dataHandler = obj.dataHandler;
+                return;
+            end
+            
+            if(obj.ext == '.csv')
+                [header, matrix] = obj.readCSV();
+            elseif(obj.ext == '.dat')
+                [header, matrix] = obj.readDat();
+            end
+
+            [origTime, origInputSeq, origOutputSeq] = obj.getInputOutputPolarization(header, matrix);
             obj.dataHandler = DataHandler(origInputSeq, origOutputSeq, origTime);
             dataHandler = obj.dataHandler;
         end
@@ -132,7 +150,7 @@ classdef FileHandler < handle
             end
         end
 
-        function [time, voltage, strain] = getInputOutput(obj, header, matrix)
+        function [time, voltage, strain] = getInputOutputStrain(obj, header, matrix)
             time = obj.getColumnMatchingHeader(header, matrix, '.*(Time).*');
             strain = obj.getColumnMatchingHeader(header, matrix, '.*(D1).*');
             vp = obj.getColumnMatchingHeader(header, matrix, '.*(V\+).*');
@@ -140,6 +158,14 @@ classdef FileHandler < handle
             voltage = (vp + vn)/2 + (vp - vn)/2;
         end
 
+        function [time, voltage, pol] = getInputOutputPolarization(obj, header, matrix)
+            time = obj.getColumnMatchingHeader(header, matrix, '.*(Time).*');
+            pol = obj.getColumnMatchingHeader(header, matrix, '.*(P1).*');
+            vp = obj.getColumnMatchingHeader(header, matrix, '.*(V\+).*');
+            vn = obj.getColumnMatchingHeader(header, matrix, '.*(V\-).*');
+            voltage = (vp + vn)/2 + (vp - vn)/2;
+        end
+        
         function [column] = getColumnMatchingHeader(obj, header, matrix, toMatch)
             column = zeros(size(matrix,1), 1);
             for i=1:length(header)

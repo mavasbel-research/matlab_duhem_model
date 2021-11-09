@@ -130,6 +130,18 @@ classdef DataHandler < matlab.mixin.SetGet %handle
             [inputSeq, outputSeq, indexesSeq] = obj.findSequenceParams();
         end
         
+        function [inputSeq, outputSeq, indexesSeq] = zeroMeanInput(obj)
+            obj.inputSeq = obj.inputSeq-mean(obj.inputSeq);
+            
+            [inputSeq, outputSeq, indexesSeq] = obj.findSequenceParams();
+        end
+        
+        function [inputSeq, outputSeq, indexesSeq] = zeroMeanOutput(obj)
+            obj.outputSeq = obj.outputSeq-mean(obj.outputSeq);
+            
+            [inputSeq, outputSeq, indexesSeq] = obj.findSequenceParams();
+        end
+        
         %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
         
         function [inputSeq, outputSeq, indexesSeq] = interpSequence(obj, interpLength)
