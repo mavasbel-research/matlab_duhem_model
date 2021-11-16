@@ -12,7 +12,7 @@ clc
 % f2 = @(u,x) dh_rho*(abs(1+x/dh_Fc)^dh_r)*sign(1+x/dh_Fc);
 
 % Bouc-wen parameters 
-% Papers divergent parameters
+% Papers divergent parameters 
 % bw_alpha = 0.1;
 % bw_beta = 0.1;
 % bw_zeta = -0.2;
