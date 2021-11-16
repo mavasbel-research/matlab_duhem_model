@@ -26,17 +26,24 @@ clc
 % bw_n = 3;
 % bw_eta = 1;
 
-bw_alpha = 10.0;
-bw_beta = 2.0;
-bw_zeta = -1;
-bw_n = 3;
-bw_eta = 0.1;
+% bw_alpha = 10.0;
+% bw_beta = 2.0;
+% bw_zeta = -1;
+% bw_n = 3;
+% bw_eta = 0.1;
+% 
+% (bw_alpha/(bw_beta+bw_zeta))^bw_n
+% (bw_alpha/(bw_beta-bw_zeta))^bw_n
 
-(bw_alpha/(bw_beta+bw_zeta))^bw_n
-(bw_alpha/(bw_beta-bw_zeta))^bw_n
+% bw_alpha = params(1);
+% bw_beta = params(2);
+% bw_zeta = params(3);
+% f1 = @(u,x) bw_eta*(bw_alpha - bw_beta*abs(x)^bw_n - bw_zeta*x*abs(x)^(bw_n-1));
+% f2 = @(u,x) bw_eta*(bw_alpha - bw_beta*abs(x)^bw_n + bw_zeta*x*abs(x)^(bw_n-1));
 
-f1 = @(u,x) bw_eta*(bw_alpha - bw_beta*abs(x)^bw_n - bw_zeta*x*abs(x)^(bw_n-1));
-f2 = @(u,x) bw_eta*(bw_alpha - bw_beta*abs(x)^bw_n + bw_zeta*x*abs(x)^(bw_n-1));
+% Parameters for polynomial fitted duhem
+% f1 = @(u,x)   ( params(1) + params(2)*u + params(3)*u^2 + params(4)*u^3 +  params(5)*u^4 - x );
+% f2 = @(u,x) - ( params(6) + params(7)*u + params(8)*u^2 + params(9)*u^3 + params(10)*u^4 - x );
 
 % Create model
 duhemModel = DuhemModel(f1,f2);
@@ -113,13 +120,13 @@ ylabel('$y$','Interpreter','latex');
 %%  Input creation
 
 % Simulation parameters for periodic input
-samplesPerCycle = 1000; 
-cycles = 3;
+samplesPerCycle = 150; 
+cycles = 10;
 % uMin = -12; 
 % uMax =  12;
-% x0 = 0.5;
-% uMin = -1; 
-% uMax =  1;
+x0 = 0.5;
+uMin = -2; 
+uMax =  2;
 % x0 = dataHandler.outputSeq(1);
 % uMin = -10; 
 % uMax =  10;
@@ -174,6 +181,9 @@ odeOutFunc = @(tq,xq,flag)odeDrawing(...
         'Refine',1,...
         'MaxStep',10,...
         'Stats','on'));
+
+% Create data handler for fitting test
+% dataHandler = DataHandler(uVec, xTime, tTime);
 
 % Mark initial and final
 plot(uVec(1),xTime(1),'o',...
@@ -239,9 +249,6 @@ function dyq = odeModel(tq,xq,tVec,uVec,duVec)
 end
 
 function [uq,duq] = odeuVecduVecSolver(tq,tVec,uVec,duVec)
-%     [~,index] = min(abs(tq-tVec));
-%     uq = uVec(index);
-%     duq = duVec(index);
     uq = interp1(tVec,uVec,tq);
     duq = interp1(tVec,duVec,tq);
 end

@@ -4,13 +4,9 @@ close all
 % clc
 
 %% Create miller model global parameters
-% Ps = 4.75;
-% Pr = 4.4;
-% Ec = 3.2;
-Ps = reg(1);
-Pr = reg(2);
-Ec = reg(3);
-delta = Ec * ( log((1+Pr/Ps)/(1-Pr/Ps)) )^(-1);
+% Ps = 21; Pr = 14; Ec = 10;
+% Ps = params(1); Pr = params(2); Ec = params(3);
+delta = Ec*( log((1+Pr/Ps)/(1-Pr/Ps)) )^(-1);
 
 % Saturation curves
 PsatPlus   = @(E)  Ps*tanh(( E-Ec)/(2*delta));
@@ -21,12 +17,12 @@ dPsatPlus  = @(E) Ps*( sech(( E-Ec)/(2*delta)) ).^2 * (1/(2*delta));
 dPsatMinus = @(E) Ps*( sech((-E-Ec)/(2*delta)) ).^2 * (1/(2*delta));
 
 % Gamma term
-% GammaPlus  = @(E,Pd) 1 - tanh(  ( (Pd -  PsatPlus(E))/( Ps-Pd ) ).^(1/2)  );
-% GammaMinus = @(E,Pd) 1 - tanh(  ( (Pd - PsatMinus(E))/(-Ps-Pd ) ).^(1/2)  );
+GammaPlus  = @(E,Pd) 1 - tanh(  ( (Pd -  PsatPlus(E))/( Ps-Pd ) ).^(1/2)  );
+GammaMinus = @(E,Pd) 1 - tanh(  ( (Pd - PsatMinus(E))/(-Ps-Pd ) ).^(1/2)  );
 % GammaPlus  = @(E,Pd) 1 - tanh(  (  abs((Pd -  PsatPlus(E))/( Ps-Pd ))  ).^(1/2)  );
 % GammaMinus = @(E,Pd) 1 - tanh(  (  abs((Pd - PsatMinus(E))/(-Ps-Pd ))  ).^(1/2)  );
-GammaPlus  = @(E,Pd) 1 - tanh(  ( (Pd -  PsatPlus(E))/( Ps-Pd ) )  );
-GammaMinus = @(E,Pd) 1 - tanh(  ( (Pd - PsatMinus(E))/(-Ps-Pd ) )  );
+% GammaPlus  = @(E,Pd) 1 - tanh(  ( (Pd -  PsatPlus(E))/( Ps-Pd ) )  );
+% GammaMinus = @(E,Pd) 1 - tanh(  ( (Pd - PsatMinus(E))/(-Ps-Pd ) )  );
 
 % Duhem model f1 & f2 functions
 f1 = @(u,x)  GammaPlus(u,x) * dPsatPlus(u);
@@ -73,8 +69,8 @@ duhemModel = DuhemModel(f1,f2);
 hPad = 0.1; vPad = 0.1; 
 minHPad = 0.1; minVPad = 0.1; 
 autoAdjust = false;
-hGridSize = 500; hLims = [-1.0 1.0]*8.5; 
-vGridSize = 500; vLims = [-1.0 1.0]*6;
+hGridSize = 500; hLims = [-1.0 1.0]*10; 
+vGridSize = 500; vLims = [-1.0 1.0]*5;
 hRange = hLims(2)-hLims(1); vRange = vLims(2)-vLims(1);
 % [anHystCurves, avgHystCurves] = ...
 %     DuhemModel.findAnhysteresisCurve(duhemModel,...
@@ -144,8 +140,8 @@ end
 %%  Input creation
 
 % Simulation parameters for periodic input
-samplesPerCycle = 80; 
-cycles = 4;
+samplesPerCycle = 100; 
+cycles = 5;
 uMin = -2; 
 uMax =  2;
 x0 = 0;

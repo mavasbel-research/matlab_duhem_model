@@ -153,20 +153,20 @@ clc
 % Butterfly cubic polynomial paper 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-yWidth = 20;
-xWidth = 30;
-xyCenter = [0, 0];
-
-evalLim = [-15,15];
-samples = 2000;
-
-uVals = linspace(evalLim(1),evalLim(2),samples)';
-yVals = 0.1*uVals.^3 + 0.1*uVals + 1.0;
-curve1 = [uVals,yVals];
-
-uVals = linspace(evalLim(1),evalLim(2),samples)';
-yVals = - 0.1*uVals.^3 - 0.1*uVals - 1.0;
-curve2 = [uVals,yVals];
+% yWidth = 20;
+% xWidth = 30;
+% xyCenter = [0, 0];
+% 
+% evalLim = [-15,15];
+% samples = 2000;
+% 
+% uVals = linspace(evalLim(1),evalLim(2),samples)';
+% yVals = 0.1*uVals.^3 + 0.1*uVals + 1.0;
+% curve1 = [uVals,yVals];
+% 
+% uVals = linspace(evalLim(1),evalLim(2),samples)';
+% yVals = - 0.1*uVals.^3 - 0.1*uVals - 1.0;
+% curve2 = [uVals,yVals];
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % Butterfly cubic polynomial negative paper 
@@ -205,6 +205,38 @@ curve2 = [uVals,yVals];
 % uVals = linspace(evalLim(1),evalLim(2),samples)';
 % yVals = -8*sin((2*pi/12)*uVals-pi/8);
 % curve2 = [uVals,yVals];
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% Fitted curves with nonlinear identification
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+yWidth = 6;
+xWidth = 3;
+xyCenter = [0, 0];
+
+evalLim = [-3,3];
+samples = 1000;
+
+f1Regressor = [1 -2 -3 1 -1];
+f2Regressor = [2  3 -1 -1  1];
+params = [f1Regressor, f2Regressor];
+paramsLength = length(params);
+
+% f1Regressor = params(1:paramsLength/2);
+% f2Regressor = params(paramsLength/2+1:end);
+
+uVals = linspace(evalLim(1),evalLim(2),samples)';
+yVals = 0;
+for n=0:paramsLength/2-1
+    yVals = yVals + uVals.^n*f1Regressor(n+1);
+end
+curve1 = [uVals,yVals];
+
+uVals = linspace(evalLim(1),evalLim(2),samples)';
+yVals = 0;
+for n=0:paramsLength/2-1
+    yVals = yVals + uVals.^n*f2Regressor(n+1);
+end
+curve2 = [uVals,yVals];
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 

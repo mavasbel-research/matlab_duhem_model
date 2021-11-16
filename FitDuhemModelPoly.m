@@ -4,11 +4,11 @@ clc
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % Adjust data
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-scaleInput = 10;
-scaleOutput = 10;
-dataHandler.resetOrigSequences();
-dataHandler.normalizeInput(scaleInput);
-dataHandler.normalizeOutput(scaleOutput);
+% scaleInput = 10;
+% scaleOutput = 10;
+% dataHandler.resetOrigSequences();
+% dataHandler.normalizeInput(scaleInput);
+% dataHandler.normalizeOutput(scaleOutput);
 % dataHandler.trimFirstSecondMaxInput();
 % dataHandler.maxInputPeakIdx
 % dataHandler.minInputPeakIdx
@@ -31,23 +31,10 @@ uRange = uMax-uMin;
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % Fitting parameters
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-f1PolyDeg = 9;
-f2PolyDeg = 9;
+f1PolyDeg = 5;
+f2PolyDeg = 5;
 f1RegTerm = 0.0*eye(f1PolyDeg+1);
 f2RegTerm = 0.0*eye(f2PolyDeg+1);
-fminconOptions = optimoptions('fmincon',...
-                    'Algorithm','active-set',...
-                    'StepTolerance',1.0000e-12,...
-                    'FunctionTolerance',1.0000e-100,...
-                    'UseParallel',true,...
-                    'FiniteDifferenceType','central',...
-                    'FiniteDifferenceStepSize',eps^(1/2),...
-                    'MaxFunctionEvaluations',1.0000e+10,...
-                    'MaxIterations',1.2000e+3,...
-                    'RelLineSrchBndDuration',10,...
-                    'PlotFcn','optimplotfval' );
-swarmOptions = optimoptions('fmincon',...
-                    'PlotFcn','pswplotbestf' );
                 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % Fit f1
@@ -61,8 +48,10 @@ f1IntYVec = [];
 % idx1 = dataHandler.sampleLength;
 % idx0 = 98;
 % idx1 = 169;
-idx0 = 99;
-idx1 = 169;
+% idx0 = 99;
+% idx1 = 169;
+idx0 = 1424;
+idx1 = 1577;
 for idx=idx0+1:idx1
     f1IntURow = buildUMatRow(dataHandler.inputSeq(idx0:idx),f1PolyDeg);
     f1IntYasc = trapz(dataHandler.inputSeq(idx0:idx),...
@@ -77,16 +66,6 @@ objFunc1 = @(regressor)...
                             - dataHandler.outputSeq(idx0+1) )...
                     ).^2 ...
                 ) + sum( (f1RegTerm*regressor(:)).^2 ) ;
-% f1Regressor = zeros(f1PolyDeg+1,1);  
-% f1Regressor = 1.0*(rand(f1PolyDeg+1,1)-0.5);
-% f1Regressor = 1.0*ones(f1PolyDeg+1,1);
-% f1Regressor = fmincon(objFunc1,f1Regressor,[],[],[],[],[],[],[],...
-%             fminconOptions);
-% error1 = objFunc1(f1Regressor)
-
-% f1Regressor = particleswarm(objFunc1,f1PolyDeg+1,[],[],swarmOptions);
-% error1 = objFunc1(f1Regressor)
-
 f1Regressor = inv(f1IntUMat'*f1IntUMat + f1RegTerm)*f1IntUMat'...
                 *( dataHandler.outputSeq(idx0+1:idx1)...
                             - dataHandler.outputSeq(idx0+1)...
@@ -105,8 +84,10 @@ f2IntYVec = [];
 % idx1 = dataHandler.minInputPeakIdx;
 % idx0 = 169;
 % idx1 = 234;
-idx0 = 169;
-idx1 = 233;
+% idx0 = 169;
+% idx1 = 233;
+idx0 = 1577;
+idx1 = 1724;
 for idx=idx0+1:idx1
     f2IntURow = buildUMatRow(dataHandler.inputSeq(idx0:idx),f2PolyDeg);
     f2IntYdes = trapz(dataHandler.inputSeq(idx0:idx),...
@@ -121,16 +102,6 @@ objFunc2 = @(regressor)...
                             - dataHandler.outputSeq(idx0+1) )...
                     ).^2 ...
                 ) + sum( (f2RegTerm*regressor(:)).^2 ) ;
-% f2Regressor = zeros(f2PolyDeg+1,1);  
-% f2Regressor = 1.0*(rand(f2PolyDeg+1,1)-0.5);
-% f2Regressor = 1.0*ones(f2PolyDeg+1,1)*0.5;
-% f2Regressor = fmincon(objFunc2,f2Regressor,[],[],[],[],[],[],[],...
-%             fminconOptions);
-% error2 = objFunc2(f2Regressor)
-
-% f2Regressor = particleswarm(objFunc2,f2PolyDeg+1,[],[],swarmOptions);
-% error2 = objFunc2(f2Regressor)
-
 f2Regressor = - inv(f2IntUMat'*f2IntUMat + f2RegTerm)*f2IntUMat'...
                 *( dataHandler.outputSeq(idx0+1:idx1)...
                             - dataHandler.outputSeq(idx0+1)...
