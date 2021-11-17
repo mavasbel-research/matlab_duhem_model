@@ -66,8 +66,8 @@ for fhCount=1:length(fitFileHandlers)
     dataHandler = fitFileHandlers(fhCount).getPolarizationDataHandler();
     
     % Adjust data
-    scaleInput = 2;
-    scaleOutput = 2;
+    scaleInput = 5;
+    scaleOutput = 5;
     dataHandler.resetOrigSequences();
     dataHandler.zeroMeanInput();
     dataHandler.zeroMeanOutput();

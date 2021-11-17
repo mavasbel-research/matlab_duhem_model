@@ -5,7 +5,7 @@ close all
 
 %% Create miller model global parameters
 % Ps = 21; Pr = 14; Ec = 10;
-% Ps = params(1); Pr = params(2); Ec = params(3);
+Ps = params(1); Pr = params(2); Ec = params(3);
 delta = Ec*( log((1+Pr/Ps)/(1-Pr/Ps)) )^(-1);
 
 % Saturation curves
@@ -142,8 +142,8 @@ end
 % Simulation parameters for periodic input
 samplesPerCycle = 100; 
 cycles = 5;
-uMin = -2; 
-uMax =  2;
+uMin = -5; 
+uMax =  5;
 x0 = 0;
 
 t0 = 0; tend = 5*cycles;

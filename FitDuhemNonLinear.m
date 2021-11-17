@@ -14,11 +14,21 @@ fitPlotter.subfigOutput(dataHandler.indexesSeq, dataHandler.outputSeq, 'Adjusted
 fitPlotter.figLoop(dataHandler.inputSeq, dataHandler.outputSeq, 'Adjusted data', 'b');
 drawnow;
 
-ascLims = [100,168];
-descLims = [169,232];
+% ascLims = [1,35;
+%             99,168;
+%             234,301;
+%             366,401];
+% descLims = [37,97;
+%             168,234;
+%             301,366];
 
-% ascLims = [283,361];
-% descLims = [362,439];
+ascLims = [99,169;
+            232,302];
+descLims = [169,232;
+            302,366];
+   
+% ascLims = [349,450];
+% descLims = [451,549];
     
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % Create model
@@ -26,9 +36,6 @@ descLims = [169,232];
 
 % Miller model
 paramsLength = 3;
-% Ps = params(1)
-% Pr = params(2)
-% Ec = params(3)
 delta = @(params) params(3)*( log((1+params(2)/params(1))/(1-params(2)/params(1))) )^(-1);
 
 % Saturation curves
@@ -42,10 +49,6 @@ dPsatMinus = @(E,params) params(1)*( sech((-E-params(3))/(2*delta(params))) ).^2
 % Gamma term
 GammaPlus  = @(E,Pd,params) 1 - tanh(  ( (Pd -  PsatPlus(E,params))/( params(1)-Pd ) ).^(1/2)  );
 GammaMinus = @(E,Pd,params) 1 - tanh(  ( (Pd - PsatMinus(E,params))/(-params(1)-Pd ) ).^(1/2)  );
-% GammaPlus  = @(E,Pd,params) 1 - tanh(  (  abs((Pd -  PsatPlus(E,params))/( params(1)-Pd ))  ).^(1/2)  );
-% GammaMinus = @(E,Pd,params) 1 - tanh(  (  abs((Pd - PsatMinus(E,params))/(-params(1)-Pd ))  ).^(1/2)  );
-% GammaPlus  = @(E,Pd,params) 1 - tanh(  ( (Pd -  PsatPlus(E,params))/( params(1)-Pd ) )  );
-% GammaMinus = @(E,Pd,params) 1 - tanh(  ( (Pd - PsatMinus(E,params))/(-params(1)-Pd ) )  );
 
 % Model f1 & f2 functions
 f1 = @(u,y,params)  GammaPlus(u,y,params) * dPsatPlus(u,params);
@@ -113,14 +116,14 @@ end
 
 fminconOptions = optimoptions('fmincon',...
                     'Algorithm','interior-point',...
-                    'StepTolerance',1.0000e-30,...
-                    'FunctionTolerance',1.0000e-10,...
-                    'OptimalityTolerance',1.0000e-15,...
+                    'StepTolerance',1.0000e-200,...
+                    'FunctionTolerance',1.0000e-50,...
+                    'OptimalityTolerance',1.0000e-50,...
+                    'ConstraintTolerance',1.0000e-50,...
                     'FiniteDifferenceType','central',...
                     'FiniteDifferenceStepSize',eps^(1/2),...
                     'MaxFunctionEvaluations',1.0000e+5,...
                     'MaxIterations',1.0000e+5,...
-                    'RelLineSrchBndDuration',1,...
                     'Display','iter-detailed',...
                     'PlotFcn','optimplotfvalconstr',...
                     'UseParallel',true);
@@ -139,14 +142,15 @@ swarmOptions = optimoptions('particleswarm',...
 % Run optimization
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-params0 = rand(paramsLength,1)+2;
-% params0 = [10;5;9];
-% params0 = params;
-ub = params0 + 10.0 + 0.1*rand(paramsLength,1);
+% params0 = rand(paramsLength,1)+2;
+params0 = [30;29;20];
+% params0 = params + 20*rand(paramsLength,1);
+ub = params0 + 100.0 + 0.1*rand(paramsLength,1);
 lb = zeros(paramsLength,1) + 0.1*rand(paramsLength,1);
 
 % [params,fval,exitflag,output] = fmincon(@(params)objFuncRandom(objFuncs,params),...
-%                 params0,[-1 1 0],...
+%                 params0,...
+%                 [-1 1 0],...
 %                 [0],...
 %                 [],[],lb,ub,...
 %                 @(params)evalConstFuncs(nonLinConst,params),...
