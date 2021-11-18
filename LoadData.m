@@ -69,12 +69,12 @@ for fhCount=1:length(fitFileHandlers)
     scaleInput = 5;
     scaleOutput = 5;
     dataHandler.resetOrigSequences();
-    dataHandler.zeroMeanInput();
-    dataHandler.zeroMeanOutput();
+%     dataHandler.zeroMeanInput();
+%     dataHandler.zeroMeanOutput();
     dataHandler.normalizeInput(scaleInput);
     dataHandler.normalizeOutput(scaleOutput);
 
-    % Adjust po
+    % Plot
     fitPlotter = FitPlotter();
     % fitPlotter.subfigInput(1:dataHandler.origSampleLength, dataHandler.origInputSeq, 'Original Input', 'r');
     % fitPlotter.subfigOutput(1:dataHandler.origSampleLength, dataHandler.origOutputSeq, 'Original Output', 'r');

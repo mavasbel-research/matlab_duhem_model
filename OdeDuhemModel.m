@@ -23,8 +23,8 @@ clc
 % bw_alpha = 1.0;
 % bw_beta = 1.0;
 % bw_zeta = 2.0;
-% bw_n = 3;
-% bw_eta = 1;
+bw_n = 3;
+bw_eta = 1;
 
 % bw_alpha = 10.0;
 % bw_beta = 2.0;
@@ -35,13 +35,13 @@ clc
 % (bw_alpha/(bw_beta+bw_zeta))^bw_n
 % (bw_alpha/(bw_beta-bw_zeta))^bw_n
 
-% bw_alpha = params(1);
-% bw_beta = params(2);
-% bw_zeta = params(3);
 % f1 = @(u,x) bw_eta*(bw_alpha - bw_beta*abs(x)^bw_n - bw_zeta*x*abs(x)^(bw_n-1));
 % f2 = @(u,x) bw_eta*(bw_alpha - bw_beta*abs(x)^bw_n + bw_zeta*x*abs(x)^(bw_n-1));
 
-% Parameters for polynomial fitted duhem
+f1 = @(u,x) bw_eta*(params(1) - params(2)*abs(x)^bw_n - params(3)*x*abs(x)^(bw_n-1));
+f2 = @(u,x) bw_eta*(params(1) - params(2)*abs(x)^bw_n + params(3)*x*abs(x)^(bw_n-1));
+
+% Parameters for polynomial fitted Duhem
 % f1 = @(u,x)   ( params(1) + params(2)*u + params(3)*u^2 + params(4)*u^3 +  params(5)*u^4 - x );
 % f2 = @(u,x) - ( params(6) + params(7)*u + params(8)*u^2 + params(9)*u^3 + params(10)*u^4 - x );
 
@@ -53,11 +53,11 @@ duhemModel = DuhemModel(f1,f2);
 % Create plot paramters and obtain anhysteresis curves
 hPad = 0.1; vPad = 0.1; 
 minHPad = 0.1; minVPad = 0.1; 
-autoAdjust = true;
+autoAdjust = false;
 % hGridSize = 500; hLims = [-1.0 1.0]*1; 
 % vGridSize = 500; vLims = [-1 5]*1;
-hGridSize = 500; hLims = [-1.0 1.0]*1; 
-vGridSize = 500; vLims = [-1.0 1.0]*1;
+hGridSize = 500; hLims = [-1.0 1.0]*6; 
+vGridSize = 500; vLims = [-1.0 1.0]*6;
 % hGridSize = 500; hLims = [-1.0 1.0]*5.0; 
 % vGridSize = 500; vLims = [-8.0 10.0]*1.0;
 % hGridSize = 500; hLims = [-1.0 1.0]*13.0; 
@@ -124,13 +124,12 @@ samplesPerCycle = 150;
 cycles = 10;
 % uMin = -12; 
 % uMax =  12;
-x0 = 0.5;
+% x0 = 0.5;
 uMin = -2; 
 uMax =  2;
-% x0 = dataHandler.outputSeq(1);
+x0 = dataHandler.outputSeq(1);
 % uMin = -10; 
-% uMax =  10;
-% 
+% uMax =  10; 
 t0 = 0; tend = 5*cycles;
 uVec = [];
 for i=1:cycles
@@ -144,10 +143,12 @@ duVec = [0;diff(uVec)./diff(tVec)];
 
 % Simulation parameters for peaks input
 % samples = 500;
-% t0 = 0; tend = 20;
-% x0 = 0;
-% peaks = [-3 2.8 -2.6 2.4 -2.2 2.0 -1.8 1.6 -1.4];
-% peaks = [0 10 0 -10 0 8 0 -8 0 5 0 -5 0 3 0 -3 0];
+% t0 = 0; tend = 60;
+% % x0 = 0;
+% x0 = dataHandler.outputSeq(1);
+% % peaks = [-3 2.8 -2.6 2.4 -2.2 2.0 -1.8 1.6 -1.4];
+% % peaks = [0 10 0 -10 0 8 0 -8 0 5 0 -5 0 3 0 -3 0];
+% peaks = [0 5 0 -5 0 3.741 0 -3.659 0 2.796 0 -2.812 0];
 % uVec = [];
 % for i=1:length(peaks)-1
 %     uVec = [uVec;linspace(peaks(i),peaks(i+1),samples)'];

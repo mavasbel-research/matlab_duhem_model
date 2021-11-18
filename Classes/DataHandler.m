@@ -15,11 +15,13 @@ classdef DataHandler < matlab.mixin.SetGet %handle
         inputMax
         inputAmp
         inputOffset
+        inputScale
 
         outputMin
         outputMax
         outputAmp
         outputOffset
+        outputScale
         
         maxInputPeakIdx
         minInputPeakIdx
@@ -118,14 +120,16 @@ classdef DataHandler < matlab.mixin.SetGet %handle
         
         %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
         
-        function [inputSeq, outputSeq, indexesSeq] = normalizeInput(obj,scaleFac)
-            obj.inputSeq = scaleFac*obj.inputSeq/max([abs(obj.inputMin),abs(obj.inputMax)]);
+        function [inputSeq, outputSeq, indexesSeq, inputScale] = normalizeInput(obj,inputAmp)
+            obj.inputScale = inputAmp/max([abs(obj.inputMin),abs(obj.inputMax)]);
+            obj.inputSeq = obj.inputScale*obj.inputSeq;
             
             [inputSeq, outputSeq, indexesSeq] = obj.findSequenceParams();
         end
         
-        function [inputSeq, outputSeq, indexesSeq] = normalizeOutput(obj,scaleFac)
-            obj.outputSeq = scaleFac*obj.outputSeq/max([abs(obj.outputMax),abs(obj.outputMin)]);
+        function [inputSeq, outputSeq, indexesSeq, outputScale] = normalizeOutput(obj,outputAmp)
+            obj.outputScale = outputAmp/max([abs(obj.outputMax),abs(obj.outputMin)]);
+            obj.outputSeq = obj.outputScale*obj.outputSeq;
             
             [inputSeq, outputSeq, indexesSeq] = obj.findSequenceParams();
         end

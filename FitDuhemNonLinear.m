@@ -14,19 +14,18 @@ fitPlotter.subfigOutput(dataHandler.indexesSeq, dataHandler.outputSeq, 'Adjusted
 fitPlotter.figLoop(dataHandler.inputSeq, dataHandler.outputSeq, 'Adjusted data', 'b');
 drawnow;
 
-% ascLims = [1,35;
-%             99,168;
-%             234,301;
-%             366,401];
-% descLims = [37,97;
-%             168,234;
-%             301,366];
-
-ascLims = [99,169;
-            232,302];
-descLims = [169,232;
-            302,366];
-   
+% Indexes of the ascending and descending intervals of the input 
+ascLims = [1,35;
+            99,168;
+            234,301;
+            366,401];
+descLims = [37,97;
+            168,234;
+            301,366];
+% ascLims = [99,169;
+%             232,302];
+% descLims = [169,232;
+%             302,366];
 % ascLims = [349,450];
 % descLims = [451,549];
     
@@ -34,29 +33,76 @@ descLims = [169,232;
 % Create model
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-% Miller model
-paramsLength = 3;
-delta = @(params) params(3)*( log((1+params(2)/params(1))/(1-params(2)/params(1))) )^(-1);
+% % Miller model
+% paramsLength = 3;
+% delta = @(params) params(3)*( log((1+params(2)/params(1))/(1-params(2)/params(1))) )^(-1);
+% 
+% % Saturation curves
+% PsatPlus   = @(E,params)  params(1)*tanh( ( E-params(3))/(2*delta(params)) );
+% PsatMinus  = @(E,params) -params(1)*tanh( (-E-params(3))/(2*delta(params)) );
+% 
+% % Derivatives of saturation curves
+% dPsatPlus  = @(E,params) params(1)*( sech(( E-params(3))/(2*delta(params))) ).^2 * (1/(2*delta(params)));
+% dPsatMinus = @(E,params) params(1)*( sech((-E-params(3))/(2*delta(params))) ).^2 * (1/(2*delta(params)));
+% 
+% % Gamma term
+% GammaPlus  = @(E,Pd,params) 1 - tanh(  ( (Pd -  PsatPlus(E,params))/( params(1)-Pd ) ).^(1/2)  );
+% GammaMinus = @(E,Pd,params) 1 - tanh(  ( (Pd - PsatMinus(E,params))/(-params(1)-Pd ) ).^(1/2)  );
+% 
+% % Model f1 & f2 functions
+% f1 = @(u,y,params)  GammaPlus(u,y,params) * dPsatPlus(u,params);
+% f2 = @(u,y,params) GammaMinus(u,y,params) * dPsatMinus(u,params);
+% 
+% % Create miller model nonlinear constraint functions
+% dPSatPlusSech =  @(E,params) sech(( E-params(3))/(2*delta(params)));
+% dPSatMinusSech = @(E,params) sech((-E-params(3))/(2*delta(params)));
+% nonLinConst = {};
+% for i=1:size(ascLims,1)
+%     nonLinConst{i} = ...
+%         @(params)-dPSatPlusSech(...
+%                         dataHandler.inputSeq(ascLims(i,1):ascLims(i,2)),...
+%                         params);
+% end
+% for i=1:size(descLims,1)
+%     nonLinConst{i+size(ascLims,1)} = ...
+%         @(params)-dPSatMinusSech(...
+%                         dataHandler.inputSeq(descLims(i,1):descLims(i,2)),...
+%                         params);
+% end
+% 
+% % Create model
+% duhemModel = DuhemModel(f1,f2);
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+% Asymmetric Miller model
+paramsLength = 6;
+% PsPlus  = params(1); PrPlus  = params(2); EcPlus  = params(3);
+% PsMinus = params(4); PrMinus = params(5); EcMinus = params(6);
+
+% Delta parameter
+deltaPlus =  @(params) params(3)*( log((1+params(2)/params(1))/(1-params(2)/params(1))) )^(-1);
+deltaMinus = @(params) params(6)*( log((1+params(5)/params(4))/(1-params(5)/params(4))) )^(-1);
 
 % Saturation curves
-PsatPlus   = @(E,params)  params(1)*tanh(( E-params(3))/(2*delta(params)));
-PsatMinus  = @(E,params) -params(1)*tanh((-E-params(3))/(2*delta(params)));
+PsatPlus   = @(E,params)  params(1)*tanh( ( E-params(3))/(2*deltaPlus(params) ) );
+PsatMinus  = @(E,params) -params(4)*tanh( (-E-params(6))/(2*deltaMinus(params)) );
 
 % Derivatives of saturation curves
-dPsatPlus  = @(E,params) params(1)*( sech(( E-params(3))/(2*delta(params))) ).^2 * (1/(2*delta(params)));
-dPsatMinus = @(E,params) params(1)*( sech((-E-params(3))/(2*delta(params))) ).^2 * (1/(2*delta(params)));
+dPsatPlus  = @(E,params) params(1)*( sech(( E-params(3))/(2*deltaPlus(params)))  ).^2 * (1/(2*deltaPlus(params)) );
+dPsatMinus = @(E,params) params(4)*( sech((-E-params(6))/(2*deltaMinus(params))) ).^2 * (1/(2*deltaMinus(params)));
 
 % Gamma term
 GammaPlus  = @(E,Pd,params) 1 - tanh(  ( (Pd -  PsatPlus(E,params))/( params(1)-Pd ) ).^(1/2)  );
-GammaMinus = @(E,Pd,params) 1 - tanh(  ( (Pd - PsatMinus(E,params))/(-params(1)-Pd ) ).^(1/2)  );
+GammaMinus = @(E,Pd,params) 1 - tanh(  ( (Pd - PsatMinus(E,params))/(-params(4)-Pd ) ).^(1/2)  );
 
-% Model f1 & f2 functions
-f1 = @(u,y,params)  GammaPlus(u,y,params) * dPsatPlus(u,params);
-f2 = @(u,y,params) GammaMinus(u,y,params) * dPsatMinus(u,params);
+% Duhem model f1 & f2 functions
+f1 = @(u,x,params)  GammaPlus(u,x,params) * dPsatPlus(u,params);
+f2 = @(u,x,params) GammaMinus(u,x,params) * dPsatMinus(u,params);
 
 % Create miller model nonlinear constraint functions
-dPSatPlusSech = @(E,params) sech(( E-params(3))/(2*delta(params)));
-dPSatMinusSech = @(E,params) sech((-E-params(3))/(2*delta(params)));
+dPSatPlusSech =  @(E,params) sech(( E-params(3))/(2*deltaPlus(params)));
+dPSatMinusSech = @(E,params) sech((-E-params(6))/(2*deltaMinus(params)));
 nonLinConst = {};
 for i=1:size(ascLims,1)
     nonLinConst{i} = ...
@@ -70,6 +116,9 @@ for i=1:size(descLims,1)
                         dataHandler.inputSeq(descLims(i,1):descLims(i,2)),...
                         params);
 end
+
+% Create model
+duhemModel = DuhemModel(f1,f2);
                     
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
@@ -94,7 +143,6 @@ end
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 objFuncs = {};
-nonLinConst = {};
 for i=1:size(ascLims,1)
     objFuncs{i} = ...
         @(params)compSumSqrError(...
@@ -116,20 +164,20 @@ end
 
 fminconOptions = optimoptions('fmincon',...
                     'Algorithm','interior-point',...
-                    'StepTolerance',1.0000e-200,...
-                    'FunctionTolerance',1.0000e-50,...
-                    'OptimalityTolerance',1.0000e-50,...
-                    'ConstraintTolerance',1.0000e-50,...
+                    'ConstraintTolerance',1.0000e-10,...
+                    'OptimalityTolerance',1.0000e-10,...
+                    'StepTolerance',1.0000e-10,...
+                    'FunctionTolerance',1.0000e-10,...
                     'FiniteDifferenceType','central',...
                     'FiniteDifferenceStepSize',eps^(1/2),...
-                    'MaxFunctionEvaluations',1.0000e+5,...
-                    'MaxIterations',1.0000e+5,...
+                    'MaxFunctionEvaluations',10.0000e+3,...
+                    'MaxIterations',2.0000e+3,...
                     'Display','iter-detailed',...
                     'PlotFcn','optimplotfvalconstr',...
                     'UseParallel',true);
 
 swarmOptions = optimoptions('particleswarm',...                   
-                    'SwarmSize',50,...
+                    'SwarmSize',100,...
                     'MaxIterations',2000,...
                     'MaxStallIterations',100,...
                     'MaxStallTime',Inf,...
@@ -142,12 +190,18 @@ swarmOptions = optimoptions('particleswarm',...
 % Run optimization
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-% params0 = rand(paramsLength,1)+2;
-params0 = [30;29;20];
+% Initial parameters
+% params0 = [35;29;20];
+% params0 = 5*rand(paramsLength,1)+2;
 % params0 = params + 20*rand(paramsLength,1);
-ub = params0 + 100.0 + 0.1*rand(paramsLength,1);
-lb = zeros(paramsLength,1) + 0.1*rand(paramsLength,1);
+params0 = [35;29;20;35;29;20] + 5*rand(paramsLength,1);
 
+% Upper and lower bounds for the parameters
+ub = 2000.0 + 0.1*rand(paramsLength,1);
+lb = -2000.0 - 0.1*rand(paramsLength,1);
+% lb = zeros(paramsLength,1) + 0.1*rand(paramsLength,1);
+
+% Optimization with constraints
 % [params,fval,exitflag,output] = fmincon(@(params)objFuncRandom(objFuncs,params),...
 %                 params0,...
 %                 [-1 1 0],...
@@ -157,16 +211,18 @@ lb = zeros(paramsLength,1) + 0.1*rand(paramsLength,1);
 %                 fminconOptions)
 [params,fval,exitflag,output] = fmincon(@(params)sumObjFuncs(objFuncs,params),...
                 params0,...
-                [-1 1 0],...
+                [0 0 0 0 0 0],...
                 [0],[],[],lb,ub,...
                 @(params)evalConstFuncs(nonLinConst,params),...
                 fminconOptions)
 
+% Optimization without constraints
 % [params,fval,exitflag,output] = fmincon(@(params)objFuncRandom(objFuncs,params),...
 %                 params0,[],[],[],[],lb,ub,[],fminconOptions)
 % [params,fval,exitflag,output] = fmincon(@(params)sumObjFuncs(objFuncs,params),...
 %                 params0,[],[],[],[],lb,ub,[],fminconOptions)
 
+% Optimization with particle swarm
 % [params,fval,exitflag,output] = particleswarm(@(params)objFuncRandom(objFuncs,params),...
 %                             paramsLength,lb,ub,swarmOptions)
 % [params,fval,exitflag,output] = particleswarm(@(params)sumObjFuncs(objFuncs,params),...

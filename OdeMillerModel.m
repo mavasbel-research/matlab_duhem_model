@@ -3,41 +3,50 @@
 close all
 % clc
 
-%% Create miller model global parameters
+%% Miller model
 % Ps = 21; Pr = 14; Ec = 10;
-Ps = params(1); Pr = params(2); Ec = params(3);
-delta = Ec*( log((1+Pr/Ps)/(1-Pr/Ps)) )^(-1);
+% Ps = params(1); Pr = params(2); Ec = params(3);
+% delta = Ec*( log((1+Pr/Ps)/(1-Pr/Ps)) )^(-1);
+% 
+% % Saturation curves
+% PsatPlus   = @(E)  Ps*tanh(( E-Ec)/(2*delta));
+% PsatMinus  = @(E) -Ps*tanh((-E-Ec)/(2*delta));
+% 
+% % Derivatives of saturation curves
+% dPsatPlus  = @(E) Ps*( sech(( E-Ec)/(2*delta)) ).^2 * (1/(2*delta));
+% dPsatMinus = @(E) Ps*( sech((-E-Ec)/(2*delta)) ).^2 * (1/(2*delta));
+% 
+% % Gamma term
+% GammaPlus  = @(E,Pd) 1 - tanh(  ( (Pd -  PsatPlus(E))/( Ps-Pd ) ).^(1/2)  );
+% GammaMinus = @(E,Pd) 1 - tanh(  ( (Pd - PsatMinus(E))/(-Ps-Pd ) ).^(1/2)  );
+% 
+% % Duhem model f1 & f2 functions
+% f1 = @(u,x)  GammaPlus(u,x) * dPsatPlus(u);
+% f2 = @(u,x) GammaMinus(u,x) * dPsatMinus(u);
+
+%% Asym miller model
+PsPlus  = params(1); PrPlus  = params(2); EcPlus  = params(3);
+PsMinus = params(4); PrMinus = params(5); EcMinus = params(6);
+
+% Delta parameter
+deltaPlus =   EcPlus * ( log(  (1+PrPlus/PsPlus)/(1-PrPlus/PsPlus)  ) )^(-1);
+deltaMinus = EcMinus * ( log((1+PrMinus/PsMinus)/(1-PrMinus/PsMinus)) )^(-1);
 
 % Saturation curves
-PsatPlus   = @(E)  Ps*tanh(( E-Ec)/(2*delta));
-PsatMinus  = @(E) -Ps*tanh((-E-Ec)/(2*delta));
+PsatPlus   = @(E)  PsPlus *tanh( ( E-EcPlus )/(2*deltaPlus)  );
+PsatMinus  = @(E) -PsMinus*tanh( (-E-EcMinus)/(2*deltaMinus) );
 
 % Derivatives of saturation curves
-dPsatPlus  = @(E) Ps*( sech(( E-Ec)/(2*delta)) ).^2 * (1/(2*delta));
-dPsatMinus = @(E) Ps*( sech((-E-Ec)/(2*delta)) ).^2 * (1/(2*delta));
+dPsatPlus  = @(E) PsPlus *( sech(( E-EcPlus )/(2*deltaPlus))  ).^2 * ( 1/(2*deltaPlus)  );
+dPsatMinus = @(E) PsMinus*( sech((-E-EcMinus)/(2*deltaMinus)) ).^2 * ( 1/(2*deltaMinus) );
 
 % Gamma term
-GammaPlus  = @(E,Pd) 1 - tanh(  ( (Pd -  PsatPlus(E))/( Ps-Pd ) ).^(1/2)  );
-GammaMinus = @(E,Pd) 1 - tanh(  ( (Pd - PsatMinus(E))/(-Ps-Pd ) ).^(1/2)  );
-% GammaPlus  = @(E,Pd) 1 - tanh(  (  abs((Pd -  PsatPlus(E))/( Ps-Pd ))  ).^(1/2)  );
-% GammaMinus = @(E,Pd) 1 - tanh(  (  abs((Pd - PsatMinus(E))/(-Ps-Pd ))  ).^(1/2)  );
-% GammaPlus  = @(E,Pd) 1 - tanh(  ( (Pd -  PsatPlus(E))/( Ps-Pd ) )  );
-% GammaMinus = @(E,Pd) 1 - tanh(  ( (Pd - PsatMinus(E))/(-Ps-Pd ) )  );
+GammaPlus  = @(E,Pd) 1 - tanh(  ( (Pd - PsatPlus(E) )/( PsPlus-Pd ) ).^(1/2)  );
+GammaMinus = @(E,Pd) 1 - tanh(  ( (Pd - PsatMinus(E))/(-PsMinus-Pd) ).^(1/2)  );
 
 % Duhem model f1 & f2 functions
 f1 = @(u,x)  GammaPlus(u,x) * dPsatPlus(u);
 f2 = @(u,x) GammaMinus(u,x) * dPsatMinus(u);
-
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-% bw_alpha = reg(1);
-% bw_beta = reg(2);
-% bw_zeta = reg(3);
-% bw_n = 3;
-% bw_eta = 1;
-% 
-% f1 = @(u,x) bw_eta*(bw_alpha - bw_beta*abs(x)^bw_n - bw_zeta*x*abs(x)^(bw_n-1));
-% f2 = @(u,x) bw_eta*(bw_alpha - bw_beta*abs(x)^bw_n + bw_zeta*x*abs(x)^(bw_n-1));
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 % Create model
 duhemModel = DuhemModel(f1,f2);
@@ -85,7 +94,6 @@ figure; axHandler = axes(); hold on; % Create axes
 %     plot(axHandler,curve2(:,1),curve2(:,2),'b',...
 %         'DisplayName','$c_2(\upsilon)$'); hold on;
 % end
-
 % for i=1:size(anHystCurves,2) % Plot anhysteresis curve
 %     lineHandler = plot(axHandler,...
 %         anHystCurves{i}(:,1),anHystCurves{i}(:,2),...
@@ -95,7 +103,6 @@ figure; axHandler = axes(); hold on; % Create axes
 %         'DisplayName','Anhysteresis curve $\mathcal{A}$'); hold on;
 %     if(i>1) set(lineHandler,'handleVisibility','off'); end
 % end
-
 % for i=1:size(avgHystCurves,2) % Plot average curve
 %     lineHandler = plot(axHandler,...
 %         avgHystCurves{i}(:,1),avgHystCurves{i}(:,2),...
@@ -104,7 +111,6 @@ figure; axHandler = axes(); hold on; % Create axes
 %     if(i>1) set(lineHandler,'handleVisibility','off'); end
 % end
 if(exist('dataHandler','var'))
-%     dataHandler = DataHandler(uVec,xTime);
     plot(axHandler,dataHandler.inputSeq,dataHandler.outputSeq,'g',...
         'lineWidth',1.2,...
         'DisplayName','Experimental Data');
@@ -139,13 +145,12 @@ end
 
 %%  Input creation
 
-% Simulation parameters for periodic input
-samplesPerCycle = 100; 
+% Parameters for periodic input
+samplesPerCycle = 10000;
 cycles = 5;
 uMin = -5; 
 uMax =  5;
-x0 = 0;
-
+x0 = dataHandler.outputSeq(1);
 t0 = 0; tend = 5*cycles;
 uVec = [];
 for i=1:cycles
@@ -157,34 +162,39 @@ uVec = circshift(uVec,samplesPerCycle/2);
 tVec = linspace(t0,tend,2*samplesPerCycle*cycles)';
 duVec = [0;diff(uVec)./diff(tVec)];
 
-% Simulation parameters for peaks input
-% samples = 500;
-% t0 = 0; tend = 20;
-% x0 = 0;
-% peaks = [-3 2.8 -2.6 2.4 -2.2 2.0 -1.8 1.6 -1.4];
-% peaks = [0 10 0 -10 0 8 0 -8 0 5 0 -5 0 3 0 -3 0];
+% Parameters for fading triangular input
+% samples = 1000;
+% t0 = 0; tend = 60;
+% x0 = dataHandler.outputSeq(1);
+% % peaks = [-3 2.8 -2.6 2.4 -2.2 2.0 -1.8 1.6 -1.4];
+% % peaks = [0 10 0 -10 0 8 0 -8 0 5 0 -5 0 3 0 -3 0];
+% peaks = [0 5 0 -5 0 3.741 0 -3.659 0 2.796 0 -2.812 0];
 % uVec = [];
 % for i=1:length(peaks)-1
 %     uVec = [uVec;linspace(peaks(i),peaks(i+1),samples)'];
 % end
 % tVec = linspace( t0,tend,samples*(length(peaks)-1) )';
 % duVec = [0;diff(uVec)./diff(tVec)];
-% uMin = min(peaks); uMax = max(peaks);
 
 %% Simulation ode
 
 % Create animated plot handlers and invoke ode
 % if (exist('anLineHand','var')); clearpoints(anLineHand); end;
-anLineHand = animatedline(axHandler,...
+anLineHand1 = animatedline(axHandler,...
     'LineWidth',1.2,...
-    'Color','k',...,
+    'Color','black',...,
     'DisplayName','Duhem model',...
     'HandleVisibility','on');
-odeOutFunc = @(tq,xq,flag)odeDrawing(...
-    tq,xq,flag,...
+anLineHand2 = animatedline(axHandler,...
+    'LineWidth',1.2,...
+    'Color','magenta',...,
+    'DisplayName','Convex output',...
+    'HandleVisibility','on');
+odeOutFunc = @(tq,xq,flag)odeDrawing(tq,xq,flag,...
     tVec,uVec,duVec,...
-    anLineHand,...
-    autoAdjust,hPad,vPad,minHPad,minVPad);
+    autoAdjust,hPad,vPad,minHPad,minVPad,...
+    anLineHand1,...
+    anLineHand2);
 [tTime,xTime] = ode113(...
     @(tq,xq)odeModel(tq,xq,tVec,uVec,duVec),...
     tVec,x0,...
@@ -199,41 +209,46 @@ odeOutFunc = @(tq,xq,flag)odeDrawing(...
 
 % Mark initial and final
 plot(uVec(1),xTime(1),'o',...
-    'Color','k',...
+    'Color','black',...
     'LineWidth',1.2,...
     'HandleVisibility','off');
-% plot(uVec(end),xTime(end),'x',...
-%     'Color','k',...
-%     'LineWidth',1.2,...
-%     'HandleVisibility','off');
+plot(uVec(end),xTime(end),'x',...
+    'Color','black',...
+    'LineWidth',1.2,...
+    'HandleVisibility','off');
 
 % Create data handler with simulation data
 % dataHandler = DataHandler(uVec, xTime, tTime);
 
 % Adjust plot
-% leg = legend(...
-%     'Interpreter','latex',...
-%     'Location','southeast');
 leg = legend(...
     'Interpreter','latex',...
-    'Location','northeast');
+    'Location','southeast');
+% leg = legend(...
+%     'Interpreter','latex',...
+%     'Location','northeast');
 
 %% Ode plotting functions
 
 function output = odeDrawing(tq,xq,flag,...
     tVec,uVec,duVec,...
-    anLineHand,...
-    autoAdjust,hPad,vPad,minHPad,minVPad)
+    autoAdjust,hPad,vPad,minHPad,minVPad,...
+    anLineHand1,...
+    anLineHand2)
+
+%     conv = @(x) 0.2*(0.7*x.^2 - 2*x - 10);
     if strcmp(flag,'init')
         [uq,duq] = odeuVecduVecSolver(tq(1),tVec,uVec,duVec);
-        addpoints(anLineHand,uq,xq(1,:));
+        addpoints(anLineHand1,uq,xq(1,:));
+%         addpoints(anLineHand2,uq,conv(xq(1,:)));
     elseif strcmp(flag,'done')
     else
         [uq,duq] = odeuVecduVecSolver(tq,tVec,uVec,duVec);
-        addpoints(anLineHand,uq,xq);
+        addpoints(anLineHand1,uq,xq);
+%         addpoints(anLineHand2,uq,conv(xq));
     end
     if(autoAdjust)
-        autoAdjustPlot(anLineHand,hPad,vPad,minHPad,minVPad);
+        autoAdjustPlot(anLineHand1,hPad,vPad,minHPad,minVPad);
     end
     drawnow limitrate;
 %     drawnow;
