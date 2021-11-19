@@ -3,6 +3,16 @@
 close all
 % clc
 
+%% Get scales in case thy exists
+%u = actual_input*inputScale
+%y = actual_output*outputScale
+inputInvScale = 1;
+outputInvScale = 1;
+if(exist('dataHandler','var'))
+    inputInvScale = dataHandler.inputScale;
+    outputInvScale = dataHandler.outputScale;
+end
+
 %% Miller model
 % Ps = 21; Pr = 14; Ec = 10;
 % Ps = params(1); Pr = params(2); Ec = params(3);
@@ -44,9 +54,15 @@ dPsatMinus = @(E) PsMinus*( sech((-E-EcMinus)/(2*deltaMinus)) ).^2 * ( 1/(2*delt
 GammaPlus  = @(E,Pd) 1 - tanh(  ( (Pd - PsatPlus(E) )/( PsPlus-Pd ) ).^(1/2)  );
 GammaMinus = @(E,Pd) 1 - tanh(  ( (Pd - PsatMinus(E))/(-PsMinus-Pd) ).^(1/2)  );
 
-% Duhem model f1 & f2 functions
-f1 = @(u,x)  GammaPlus(u,x) * dPsatPlus(u);
-f2 = @(u,x) GammaMinus(u,x) * dPsatMinus(u);
+% Scaled Duhem model f1 & f2 functions
+f1Scaled = @(u,x)  GammaPlus(u,x) * dPsatPlus(u);
+f2Scaled = @(u,x) GammaMinus(u,x) * dPsatMinus(u);
+
+% Duhem model f1 & f2 without scales
+% f1 = f1Scaled;
+% f2 = f2Scaled;
+f1 = @(v,z) (dataHandler.inputScale/dataHandler.outputScale)*f1Scaled(v*dataHandler.inputScale,z*dataHandler.outputScale);
+f2 = @(v,z) (dataHandler.inputScale/dataHandler.outputScale)*f2Scaled(v*dataHandler.inputScale,z*dataHandler.outputScale);
 
 % Create model
 duhemModel = DuhemModel(f1,f2);
@@ -65,21 +81,16 @@ duhemModel = DuhemModel(f1,f2);
 % % Create model
 % duhemModel = DuhemModel(f1,f2);
 
-%% Experiments
-% u = linspace(-50,50,1000);
-% yp = dPsatp(u);
-% ym = dPsatm(u);
-% plot(u,yp,u,ym);
-% plot(u,ym)
-
 %% Create plots
 
 % Create plot paramters and obtain anhysteresis curves
 hPad = 0.1; vPad = 0.1; 
 minHPad = 0.1; minVPad = 0.1; 
 autoAdjust = false;
-hGridSize = 500; hLims = [-1.0 1.0]*10; 
-vGridSize = 500; vLims = [-1.0 1.0]*5;
+% hGridSize = 500; hLims = [-1.0 1.0]*10; 
+% vGridSize = 500; vLims = [-1.0 1.0]*5;
+hGridSize = 500; hLims = [-1.0 1.0]*1500; 
+vGridSize = 500; vLims = [-10 30]*1;
 hRange = hLims(2)-hLims(1); vRange = vLims(2)-vLims(1);
 % [anHystCurves, avgHystCurves] = ...
 %     DuhemModel.findAnhysteresisCurve(duhemModel,...
@@ -110,9 +121,12 @@ figure; axHandler = axes(); hold on; % Create axes
 %         'DisplayName','f_1+f_2=0'); hold on;
 %     if(i>1) set(lineHandler,'handleVisibility','off'); end
 % end
+
 if(exist('dataHandler','var'))
-    plot(axHandler,dataHandler.inputSeq,dataHandler.outputSeq,'g',...
-        'lineWidth',1.2,...
+    plot(axHandler,...
+        dataHandler.inputSeq/inputInvScale,...
+        dataHandler.outputSeq/outputInvScale,...
+        'g','lineWidth',1.2,...
         'DisplayName','Experimental Data');
 end
 axis([hLims(1)-hRange*hPad,hLims(2)+hRange*hPad,...
@@ -121,60 +135,66 @@ xlabel('$u$','Interpreter','latex');
 ylabel('$y$','Interpreter','latex');
 
 % Plot saturations
-uSat = linspace(-500,500,2000);
 if(exist('PsatPlus','var'))
-    plot(uSat,PsatPlus(uSat),...
+    vSat = linspace(-3000,3000,3000);
+    plot(vSat,PsatPlus(vSat*inputInvScale)/outputInvScale,...
         'Color','r',...
         'LineWidth',1.2,...
         'DisplayName','$P_{sat}^+$',...
         'HandleVisibility','on');
-    plot(uSat,PsatMinus(uSat),...
+    plot(vSat,PsatMinus(vSat*inputInvScale)/outputInvScale,...
         'Color','b',...
         'LineWidth',1.2,...
         'DisplayName','$P_{sat}^-$',...
         'HandleVisibility','on');
-% plot(uSat,dPsatPlus(uSat),...
+% plot(uSat,dPsatPlus(uSat*inputInvScale)/outputInvScale,...
 %     'Color','r',...
 %     'LineWidth',1.2,...
 %     'HandleVisibility','off');
-% plot(uSat,dPsatMinus(uSat),...
+% plot(uSat,dPsatMinus(uSat*inputInvScale)/outputInvScale,...
 %     'Color','b',...
 %     'LineWidth',1.2,...
 %     'HandleVisibility','off');
+
 end
 
 %%  Input creation
 
 % Parameters for periodic input
-samplesPerCycle = 10000;
-cycles = 5;
-uMin = -5; 
-uMax =  5;
-x0 = dataHandler.outputSeq(1);
-t0 = 0; tend = 5*cycles;
-uVec = [];
-for i=1:cycles
-    uVec = [uVec;linspace(uMax,uMin,samplesPerCycle)'];
-    uVec = [uVec;linspace(uMin,uMax,samplesPerCycle)'];
+% samplesPerCycle = 10000;
+% cycles = 5;
+% % uMin = -5; 
+% % uMax =  5;
+% % x0 = dataHandler.outputSeq(1);
+% uMin = dataHandler.inputMin/inputInvScale;
+% uMax = dataHandler.inputMax/inputInvScale;
+% x0 = dataHandler.outputSeq(1)/outputInvScale;
+% x0 = 0;
+% t0 = 0; tend = 5*cycles;
+% uVec = [];
+% for i=1:cycles
 %     uVec = [uVec;linspace(uMax,uMin,samplesPerCycle)'];
-end
-uVec = circshift(uVec,samplesPerCycle/2);
-tVec = linspace(t0,tend,2*samplesPerCycle*cycles)';
-duVec = [0;diff(uVec)./diff(tVec)];
+%     uVec = [uVec;linspace(uMin,uMax,samplesPerCycle)'];
+% %     uVec = [uVec;linspace(uMax,uMin,samplesPerCycle)'];
+% end
+% uVec = circshift(uVec,samplesPerCycle/2);
+% tVec = linspace(t0,tend,2*samplesPerCycle*cycles)';
+% duVec = [0;diff(uVec)./diff(tVec)];
 
 % Parameters for fading triangular input
-% samples = 1000;
-% t0 = 0; tend = 60;
-% x0 = dataHandler.outputSeq(1);
-% % peaks = [-3 2.8 -2.6 2.4 -2.2 2.0 -1.8 1.6 -1.4];
-% % peaks = [0 10 0 -10 0 8 0 -8 0 5 0 -5 0 3 0 -3 0];
-% peaks = [0 5 0 -5 0 3.741 0 -3.659 0 2.796 0 -2.812 0];
-% uVec = [];
-% for i=1:length(peaks)-1
-%     uVec = [uVec;linspace(peaks(i),peaks(i+1),samples)'];
-% end
-% tVec = linspace( t0,tend,samples*(length(peaks)-1) )';
-% duVec = [0;diff(uVec)./diff(tVec)];
+samples = 1000;
+t0 = 0; tend = 60;
+x0 = dataHandler.outputSeq(1);
+% peaks = [-3 2.8 -2.6 2.4 -2.2 2.0 -1.8 1.6 -1.4];
+% peaks = [0 10 0 -10 0 8 0 -8 0 5 0 -5 0 3 0 -3 0];
+peaks = [0 5 0 -5 0 3.741 0 -3.659 0 2.796 0 -2.812 0];
+uVec = [];
+for i=1:length(peaks)-1
+    uVec = [uVec;linspace(peaks(i),peaks(i+1),samples)'];
+end
+tVec = linspace( t0,tend,samples*(length(peaks)-1) )';
+uVec = uVec/inputInvScale;
+duVec = [0;diff(uVec)./diff(tVec)];
 
 %% Simulation ode
 
@@ -189,7 +209,7 @@ anLineHand2 = animatedline(axHandler,...
     'LineWidth',1.2,...
     'Color','magenta',...,
     'DisplayName','Convex output',...
-    'HandleVisibility','on');
+    'HandleVisibility','off');
 odeOutFunc = @(tq,xq,flag)odeDrawing(tq,xq,flag,...
     tVec,uVec,duVec,...
     autoAdjust,hPad,vPad,minHPad,minVPad,...
@@ -218,7 +238,7 @@ plot(uVec(end),xTime(end),'x',...
     'HandleVisibility','off');
 
 % Create data handler with simulation data
-% dataHandler = DataHandler(uVec, xTime, tTime);
+dataHandlerFitted = DataHandler(uVec, xTime, tTime);
 
 % Adjust plot
 leg = legend(...
@@ -236,16 +256,16 @@ function output = odeDrawing(tq,xq,flag,...
     anLineHand1,...
     anLineHand2)
 
-%     conv = @(x) 0.2*(0.7*x.^2 - 2*x - 10);
+    conv = @(x) 0.2*(0.7*x.^2 - 2*x - 10);
     if strcmp(flag,'init')
         [uq,duq] = odeuVecduVecSolver(tq(1),tVec,uVec,duVec);
         addpoints(anLineHand1,uq,xq(1,:));
-%         addpoints(anLineHand2,uq,conv(xq(1,:)));
+        addpoints(anLineHand2,uq,conv(xq(1,:)));
     elseif strcmp(flag,'done')
     else
         [uq,duq] = odeuVecduVecSolver(tq,tVec,uVec,duVec);
         addpoints(anLineHand1,uq,xq);
-%         addpoints(anLineHand2,uq,conv(xq));
+        addpoints(anLineHand2,uq,conv(xq));
     end
     if(autoAdjust)
         autoAdjustPlot(anLineHand1,hPad,vPad,minHPad,minVPad);
