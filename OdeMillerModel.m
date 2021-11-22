@@ -122,7 +122,7 @@ if(exist('dataHandler','var')) % Plot experimental data
         dataHandler.inputSeq/inputScale-inputShift,...
         dataHandler.outputSeq/outputScale-outputShift,...
         'g','lineWidth',1.2,...
-        'DisplayName','Experimental Data');
+        'DisplayName','Experimental data');
 end
 if(exist('PsatPlus','var')) % Plot saturations
     uSat = linspace(-3000,3000,3000);
@@ -153,7 +153,7 @@ ylabel('$y$','Interpreter','latex');
 %%  Input creation
 
 % Parameters for periodic input
-samplesPerCycle = 500;
+samplesPerCycle = 1000;
 cycles = 10;
 % uMin = -1500; 
 % uMax = 1500;
@@ -232,12 +232,12 @@ plot(uVec(end),xTime(end),'x',...
 dataHandlerSim = DataHandler(uVec, xTime, tTime);
 
 % Adjust plot
-leg = legend(...
-    'Interpreter','latex',...
-    'Location','southeast');
 % leg = legend(...
 %     'Interpreter','latex',...
-%     'Location','northeast');
+%     'Location','southeast');
+leg = legend(...
+    'Interpreter','latex',...
+    'Location','northeast');
 
 %% Ode plotting functions
 
