@@ -49,9 +49,9 @@ descLims = [37,97;
 % GammaPlus  = @(E,Pd,params) 1 - tanh(  ( (Pd -  PsatPlus(E,params))/( params(1)-Pd ) ).^(1/2)  );
 % GammaMinus = @(E,Pd,params) 1 - tanh(  ( (Pd - PsatMinus(E,params))/(-params(1)-Pd ) ).^(1/2)  );
 % 
-% % Model f1 & f2 functions
-% f1 = @(u,y,params)  GammaPlus(u,y,params) * dPsatPlus(u,params);
-% f2 = @(u,y,params) GammaMinus(u,y,params) * dPsatMinus(u,params);
+% % Model f1Param & f2Param functions
+% f1Param = @(u,y,params)  GammaPlus(u,y,params) * dPsatPlus(u,params);
+% f2Param = @(u,y,params) GammaMinus(u,y,params) * dPsatMinus(u,params);
 % 
 % % Create miller model nonlinear constraint functions
 % dPSatPlusSech =  @(E,params) sech(( E-params(3))/(2*delta(params)));
@@ -71,7 +71,7 @@ descLims = [37,97;
 % end
 % 
 % % Create model
-% duhemModel = DuhemModel(f1,f2);
+% duhemModel = DuhemModel(f1Param,f2Param);
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
@@ -96,9 +96,9 @@ dPsatMinus = @(E,params) params(4)*( sech((-E-params(6))/(2*deltaMinus(params)))
 GammaPlus  = @(E,Pd,params) 1 - tanh(  ( (Pd -  PsatPlus(E,params))/( params(1)-Pd ) ).^(1/2)  );
 GammaMinus = @(E,Pd,params) 1 - tanh(  ( (Pd - PsatMinus(E,params))/(-params(4)-Pd ) ).^(1/2)  );
 
-% Duhem model f1 & f2 functions
-f1 = @(u,x,params)  GammaPlus(u,x,params) * dPsatPlus(u,params);
-f2 = @(u,x,params) GammaMinus(u,x,params) * dPsatMinus(u,params);
+% Duhem model f1Param & f2Param functions
+f1Param = @(u,x,params)  GammaPlus(u,x,params) * dPsatPlus(u,params);
+f2Param = @(u,x,params) GammaMinus(u,x,params) * dPsatMinus(u,params);
 
 % Create miller model nonlinear constraint functions
 dPSatPlusSech =  @(E,params) sech(( E-params(3))/(2*deltaPlus(params)));
@@ -118,7 +118,7 @@ for i=1:size(descLims,1)
 end
 
 % Create model
-duhemModel = DuhemModel(f1,f2);
+duhemModel = DuhemModel(f1Param,f2Param);
                     
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
@@ -126,16 +126,16 @@ duhemModel = DuhemModel(f1,f2);
 % bw_n = 3;
 % bw_eta = 1;
 % paramsLength = 3;
-% f1 = @(u,x,params) bw_eta*(params(1) - params(2)*abs(x)^bw_n - params(3)*x*abs(x)^(bw_n-1));
-% f2 = @(u,x,params) bw_eta*(params(1) - params(2)*abs(x)^bw_n + params(3)*x*abs(x)^(bw_n-1));
+% f1Param = @(u,x,params) bw_eta*(params(1) - params(2)*abs(x)^bw_n - params(3)*x*abs(x)^(bw_n-1));
+% f2Param = @(u,x,params) bw_eta*(params(1) - params(2)*abs(x)^bw_n + params(3)*x*abs(x)^(bw_n-1));
 % nonLinConst = {};
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 % Polynomial of 5th grade
 % paramsLength = 10;
-% f1 = @(u,x,params)   ( params(1) + params(2)*u + params(3)*u^2 + params(4)*u^3 +  params(5)*u^4 - x );
-% f2 = @(u,x,params) - ( params(6) + params(7)*u + params(8)*u^2 + params(9)*u^3 + params(10)*u^4 - x );
+% f1Param = @(u,x,params)   ( params(1) + params(2)*u + params(3)*u^2 + params(4)*u^3 +  params(5)*u^4 - x );
+% f2Param = @(u,x,params) - ( params(6) + params(7)*u + params(8)*u^2 + params(9)*u^3 + params(10)*u^4 - x );
 % nonLinConst = {};
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -148,14 +148,14 @@ for i=1:size(ascLims,1)
         @(params)compSumSqrError(...
                         dataHandler.inputSeq(ascLims(i,1):ascLims(i,2)),...
                         dataHandler.outputSeq(ascLims(i,1):ascLims(i,2)),...
-                        f1,params);
+                        f1Param,params);
 end
 for i=1:size(descLims,1)
     objFuncs{i+size(ascLims,1)} = ...
         @(params)compSumSqrError(...
                         dataHandler.inputSeq(descLims(i,1):descLims(i,2)),...
                         dataHandler.outputSeq(descLims(i,1):descLims(i,2)),...
-                        f2,params);
+                        f2Param,params);
 end
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%

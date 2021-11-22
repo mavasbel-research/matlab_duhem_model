@@ -66,21 +66,21 @@ for fhCount=1:length(fitFileHandlers)
     dataHandler = fitFileHandlers(fhCount).getPolarizationDataHandler();
     
     % Adjust data
-    scaleInput = 5;
-    scaleOutput = 5;
+    scaleInput = 1;
+    scaleOutput = 1;
     dataHandler.resetOrigSequences();
-%     dataHandler.zeroMeanInput();
-%     dataHandler.zeroMeanOutput();
-    dataHandler.normalizeInput(scaleInput);
-    dataHandler.normalizeOutput(scaleOutput);
+    dataHandler.zeroMeanInput();
+    dataHandler.zeroMeanOutput();
+    dataHandler.scaleInput(scaleInput);
+    dataHandler.scaleOutput(scaleOutput);
 
     % Plot
     fitPlotter = FitPlotter();
-    % fitPlotter.subfigInput(1:dataHandler.origSampleLength, dataHandler.origInputSeq, 'Original Input', 'r');
-    % fitPlotter.subfigOutput(1:dataHandler.origSampleLength, dataHandler.origOutputSeq, 'Original Output', 'r');
+    fitPlotter.subfigInput(1:dataHandler.origSampleLength, dataHandler.origInputSeq, 'Original Input', 'r');
+    fitPlotter.subfigOutput(1:dataHandler.origSampleLength, dataHandler.origOutputSeq, 'Original Output', 'r');
     fitPlotter.subfigInput(dataHandler.indexesSeq, dataHandler.inputSeq, 'Adjusted Input', 'b');
     fitPlotter.subfigOutput(dataHandler.indexesSeq, dataHandler.outputSeq, 'Adjusted Output', 'b');
-    % fitPlotter.figLoop(dataHandler.origInputSeq, dataHandler.origOutputSeq, 'Original data', 'r');
+    fitPlotter.figLoop(dataHandler.origInputSeq, dataHandler.origOutputSeq, 'Original data', 'r');
     fitPlotter.figLoop(dataHandler.inputSeq, dataHandler.outputSeq, 'Adjusted data', 'b');
     drawnow;
 end

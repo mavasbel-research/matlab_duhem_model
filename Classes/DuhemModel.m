@@ -38,6 +38,8 @@ classdef DuhemModel < handle
                 findAnhysteresisCurve(duhemModel,uLims,uGridSize,yLims,yGridSize)
             [f1,f2,U,Y,uIsoline,yIsoline] = ...
                 DuhemModel.computef1f2InMesh(duhemModel,uLims,uGridSize,yLims,yGridSize);
+            f1(imag(f1)~=0) = NaN;
+            f2(imag(f2)~=0) = NaN;
             
             % Anhysteresis curve
             diffF1F2 = f1-f2;

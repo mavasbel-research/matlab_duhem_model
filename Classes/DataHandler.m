@@ -132,14 +132,14 @@ classdef DataHandler < matlab.mixin.SetGet %handle
         
         %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
         
-        function [inputSeq, outputSeq, indexesSeq, inputScale] = normalizeInput(obj,inputAmp)
+        function [inputSeq, outputSeq, indexesSeq, inputScale] = scaleInput(obj,inputAmp)
             obj.inputScale = inputAmp/max([abs(obj.inputMin),abs(obj.inputMax)]);
             obj.inputSeq = obj.inputScale*obj.inputSeq;
             
             [inputSeq, outputSeq, indexesSeq] = obj.findSequenceParams();
         end
         
-        function [inputSeq, outputSeq, indexesSeq, outputScale] = normalizeOutput(obj,outputAmp)
+        function [inputSeq, outputSeq, indexesSeq, outputScale] = scaleOutput(obj,outputAmp)
             obj.outputScale = outputAmp/max([abs(obj.outputMax),abs(obj.outputMin)]);
             obj.outputSeq = obj.outputScale*obj.outputSeq;
             
@@ -147,15 +147,15 @@ classdef DataHandler < matlab.mixin.SetGet %handle
         end
         
         function [inputSeq, outputSeq, indexesSeq] = zeroMeanInput(obj)
-            obj.inputShift = mean(obj.inputSeq);
-            obj.inputSeq = obj.inputSeq-mean(obj.inputSeq);
+            obj.inputShift = -mean(obj.inputSeq);
+            obj.inputSeq = obj.inputSeq+obj.inputShift;
             
             [inputSeq, outputSeq, indexesSeq] = obj.findSequenceParams();
         end
         
         function [inputSeq, outputSeq, indexesSeq] = zeroMeanOutput(obj)
-            obj.outputShift = mean(obj.outputSeq);
-            obj.outputSeq = obj.outputSeq-mean(obj.outputSeq);
+            obj.outputShift = -mean(obj.outputSeq);
+            obj.outputSeq = obj.outputSeq+obj.outputShift;
             
             [inputSeq, outputSeq, indexesSeq] = obj.findSequenceParams();
         end
