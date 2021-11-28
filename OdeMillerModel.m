@@ -14,55 +14,90 @@ if(exist('dataHandler','var'))
     inputShift = dataHandler.inputShift;
     outputShift = dataHandler.outputShift;
 end
+inputTrans = @(u) (u+inputShift)*inputScale;
+outputTrans = @(y) (y+outputShift)*outputScale;
+inputInvTrans  = @(u) u/inputScale-inputShift;
+outputInvTrans = @(y) y/outputScale-outputShift;
 
 %% Miller model
 % Ps = 21; Pr = 14; Ec = 10;
-% Ps = params(1); Pr = params(2); Ec = params(3);
-% delta = Ec*( log((1+Pr/Ps)/(1-Pr/Ps)) )^(-1);
-% 
-% % Saturation curves
-% PsatPlus   = @(E)  Ps*tanh(( E-Ec)/(2*delta));
-% PsatMinus  = @(E) -Ps*tanh((-E-Ec)/(2*delta));
-% 
-% % Derivatives of saturation curves
-% dPsatPlus  = @(E) Ps*( sech(( E-Ec)/(2*delta)) ).^2 * (1/(2*delta));
-% dPsatMinus = @(E) Ps*( sech((-E-Ec)/(2*delta)) ).^2 * (1/(2*delta));
-% 
-% % Gamma term
-% GammaPlus  = @(E,Pd) 1 - tanh(  ( (Pd -  PsatPlus(E))/( Ps-Pd ) ).^(1/2)  );
-% GammaMinus = @(E,Pd) 1 - tanh(  ( (Pd - PsatMinus(E))/(-Ps-Pd ) ).^(1/2)  );
-% 
-% % Duhem model f1 & f2 functions
-% f1 = @(u,x)  GammaPlus(u,x) * dPsatPlus(u);
-% f2 = @(u,x) GammaMinus(u,x) * dPsatMinus(u);
+Ps = params(1); Pr = params(2); Ec = params(3);
 
-%% Asym miller model
-PsPlus  = params(1); PrPlus  = params(2); EcPlus  = params(3);
-PsMinus = params(4); PrMinus = params(5); EcMinus = params(6);
-
-% Delta parameter
-deltaPlus =   EcPlus * ( log(  (1+PrPlus/PsPlus)/(1-PrPlus/PsPlus)  ) )^(-1);
-deltaMinus = EcMinus * ( log((1+PrMinus/PsMinus)/(1-PrMinus/PsMinus)) )^(-1);
+% Delta paramter
+delta = Ec*( log((1+Pr/Ps)/(1-Pr/Ps)) )^(-1);
 
 % Saturation curves
-PsatPlus   = @(E)  PsPlus *tanh( ( E-EcPlus )/(2*deltaPlus)  );
-PsatMinus  = @(E) -PsMinus*tanh( (-E-EcMinus)/(2*deltaMinus) );
+PsatPlus   = @(E)  Ps*tanh(( E-Ec)/(2*delta));
+PsatMinus  = @(E) -Ps*tanh((-E-Ec)/(2*delta));
 
 % Derivatives of saturation curves
-dPsatPlus  = @(E) PsPlus *( sech(( E-EcPlus )/(2*deltaPlus))  ).^2 * ( 1/(2*deltaPlus)  );
-dPsatMinus = @(E) PsMinus*( sech((-E-EcMinus)/(2*deltaMinus)) ).^2 * ( 1/(2*deltaMinus) );
+dPsatPlus  = @(E) Ps*( sech(( E-Ec)/(2*delta)) ).^2 * (1/(2*delta));
+dPsatMinus = @(E) Ps*( sech((-E-Ec)/(2*delta)) ).^2 * (1/(2*delta));
 
 % Gamma term
-GammaPlus  = @(E,Pd) 1 - tanh(  ( (Pd - PsatPlus(E) )/( PsPlus-Pd ) ).^(1/2)  );
-GammaMinus = @(E,Pd) 1 - tanh(  ( (Pd - PsatMinus(E))/(-PsMinus-Pd) ).^(1/2)  );
+GammaPlus  = @(E,Pd) 1 - (tanh(  (( (Pd -  PsatPlus(E))./( Ps-Pd ) )).^(1/2)  ));
+GammaMinus = @(E,Pd) 1 - (tanh(  (( (Pd - PsatMinus(E))./(-Ps-Pd ) )).^(1/2)  ));
 
-% Scaled Duhem model f1 & f2 functions
-f1Fitted = @(v,z)  GammaPlus(v,z) * dPsatPlus(v);
-f2Fitted = @(v,z) GammaMinus(v,z) * dPsatMinus(v);
+% % Scaled Duhem model f1 & f2 functions
+f1Fitted = @(v,z)    abs(GammaPlus(v,z) .* dPsatPlus(v));
+f2Fitted = @(v,z) abs((GammaMinus(v,z)) .* dPsatMinus(v));
 
-% Duhem model f1 & f2 without scales
-f1 = @(u,y) (inputScale/outputScale)*f1Fitted( (u+inputShift)*inputScale,(y+outputShift)*outputScale );
-f2 = @(u,y) (inputScale/outputScale)*f2Fitted( (u+inputShift)*inputScale,(y+outputShift)*outputScale );
+% % Duhem model f1 & f2 without scales
+f1 = @(u,y) ((inputScale/outputScale)*f1Fitted( inputTrans(u),outputTrans(y) ));
+f2 = @(u,y) ((inputScale/outputScale)*f2Fitted( inputTrans(u),outputTrans(y) ));
+
+% Create model
+duhemModel = DuhemModel(f1,f2);
+
+%%
+% syms v z
+% % uSat = linspace(-1500,1500,1500)';
+% % finding = fminsearch(@(finding) ...
+% %     sum(       ( outputInvTrans(PsatPlus(inputTrans(uSat))) - finding(1)*tanh((uSat-finding(3))./(2*delta)) ).^2       ) ...
+% %     + sum(       ( delta - finding(3)*(log((1+finding(2)/finding(1))/(1-finding(2)/finding(1))))^(-1) ).^2       ) , [1000,2000,1234]);
+% % finding=[1,1]
+% % length(outputInvTrans(PsatPlus(inputTrans(uSat))))
+% % length(finding(1)*tanh((uSat-finding(2))./(2*delta)))
+% 
+% % pretty(vpa(simplify(f1(v,z)),4))
+% % pretty(vpa(simplify(f2(v,z)),4))
+% vpa(simplify(outputInvTrans(PsatPlus(inputTrans(v))),4))
+% vpa(simplify(outputInvTrans(PsatMinus(inputTrans(v))),4))
+
+% PsPlus = PsPlus/outputScale;
+% EcPlus = EcPlus/inputScale;
+% exp(EcPlus/deltaPlus)
+
+%% Asym miller model
+% PsPlus  = params(1); PrPlus  = params(2); EcPlus  = params(3);
+% PsMinus = params(4); PrMinus = params(5); EcMinus = params(6);
+% % PsMinus = params(1); PrMinus = params(2); EcMinus = params(3);
+% % syms PsPlus PrPlus EcPlus
+% % syms PsMinus PrMinus EcMinus
+% 
+% % Delta parameter
+% deltaPlus =   EcPlus * ( log(  (1+PrPlus/PsPlus)/(1-PrPlus/PsPlus)  ) )^(-1);
+% deltaMinus = EcMinus * ( log((1+PrMinus/PsMinus)/(1-PrMinus/PsMinus)) )^(-1);
+% 
+% % Saturation curves
+% PsatPlus   = @(E)  PsPlus *tanh( ( E-EcPlus )/(2*deltaPlus)  );
+% PsatMinus  = @(E) -PsMinus*tanh( (-E-EcMinus)/(2*deltaMinus) );
+% 
+% % Derivatives of saturation curves
+% dPsatPlus  = @(E) PsPlus *( sech(( E-EcPlus )./(2*deltaPlus))  ).^2 * ( 1/(2*deltaPlus)  );
+% dPsatMinus = @(E) PsMinus*( sech((-E-EcMinus)./(2*deltaMinus)) ).^2 * ( 1/(2*deltaMinus) );
+% 
+% % Gamma term
+% GammaPlus  = @(E,Pd) 1 - (tanh(  (( (Pd - PsatPlus(E) )./( PsPlus-Pd ) )).^(1/2)  ));
+% GammaMinus = @(E,Pd) 1 - (tanh(  (( (Pd - PsatMinus(E))./(-PsMinus-Pd) )).^(1/2)  ));
+% 
+% % Scaled Duhem model f1 & f2 functions
+% f1Fitted = @(v,z)    abs(GammaPlus(v,z) .* dPsatPlus(v));
+% f2Fitted = @(v,z) abs((GammaMinus(v,z)) .* dPsatMinus(v));
+% 
+% % Duhem model f1 & f2 without scales
+% f1 = @(u,y) ((inputScale/outputScale)*f1Fitted( inputTrans(u), outputTrans(y) ));
+% f2 = @(u,y) ((inputScale/outputScale)*f2Fitted( inputTrans(u), outputTrans(y) ));
 
 % Create model
 duhemModel = DuhemModel(f1,f2);
@@ -81,13 +116,28 @@ duhemModel = DuhemModel(f1,f2);
 % % Create model
 % duhemModel = DuhemModel(f1,f2);
 
+%% Create polynomial model
+
+% % Scaled Duhem model f1 & f2 functions
+% f1Fitted = @(u,x)   ( params(1) + params(2)*u + params(3)*u^2 + params(4)*u^3 +  params(5)*u^4 - x );
+% f2Fitted = @(u,x) - ( params(6) + params(7)*u + params(8)*u^2 + params(9)*u^3 + params(10)*u^4 - x );
+% 
+% % Duhem model f1 & f2 without scales
+% f1 = @(u,y) (inputScale/outputScale)*f1Fitted( inputTrans(u), outputTrans(y) );
+% f2 = @(u,y) (inputScale/outputScale)*f2Fitted( inputTrans(u), outputTrans(y) );
+% 
+% % Create model
+% duhemModel = DuhemModel(f1,f2);
+
 %% Create plots
 
 % Create plot paramters and obtain anhysteresis curves
-% hGridSize = 500; hLims = [-1.0 1.0]*10; 
-% vGridSize = 500; vLims = [-1.0 1.0]*5;
 hGridSize = 1000; hLims = [-1.0 1.0]*3000; 
-vGridSize = 1000; vLims = [-1 1]*1000;
+vGridSize = 1000; vLims = hLims;
+if(exist('PsatPlus','var')) % Plot saturations
+    vLims = [outputInvTrans(PsatPlus(inputTrans(hLims(1))))...
+        outputInvTrans(PsatPlus(inputTrans(hLims(2))))]*1;
+end
 [anHystCurves, avgHystCurves] = ...
     DuhemModel.findAnhysteresisCurve(duhemModel,...
     [hLims(1), hLims(2)],hGridSize,...
@@ -119,19 +169,19 @@ end
 % end
 if(exist('dataHandler','var')) % Plot experimental data
     plot(axHandler,...
-        dataHandler.inputSeq/inputScale-inputShift,...
-        dataHandler.outputSeq/outputScale-outputShift,...
+        inputInvTrans(dataHandler.inputSeq),...
+        outputInvTrans(dataHandler.outputSeq),...
         'g','lineWidth',1.2,...
         'DisplayName','Experimental data');
 end
 if(exist('PsatPlus','var')) % Plot saturations
     uSat = linspace(-3000,3000,3000);
-    plot(uSat,PsatPlus((uSat-inputShift)*inputScale)/outputScale-outputShift,...
+    plot(uSat,outputInvTrans(PsatPlus(inputTrans(uSat))),...
         'Color','r',...
         'LineWidth',1.2,...
         'DisplayName','$P_{sat}^+$',...
         'HandleVisibility','on');
-    plot(uSat,PsatMinus((uSat-inputShift)*inputScale)/outputScale-outputShift,...
+    plot(uSat,outputInvTrans(PsatMinus(inputTrans(uSat))),...
         'Color','b',...
         'LineWidth',1.2,...
         'DisplayName','$P_{sat}^-$',...
@@ -143,7 +193,7 @@ autoAdjust = false;
 hPad = 0.1; vPad = 0.1; 
 minHPad = 0.1; minVPad = 0.1; 
 hPlotLims = [-1.0 1.0]*1500; 
-vPlotLims = [-40 100]*1;
+vPlotLims = [-40 60]*1;
 hPlotRange = hPlotLims(2)-hPlotLims(1); vPlotRange = vPlotLims(2)-vPlotLims(1);
 axis([hPlotLims(1)-hPlotRange*hPad,hPlotLims(2)+hPlotRange*hPad,...
       vPlotLims(1)-vPlotRange*vPad,vPlotLims(2)+vPlotRange*vPad]);
@@ -156,11 +206,11 @@ ylabel('$y$','Interpreter','latex');
 samplesPerCycle = 1000;
 cycles = 10;
 % uMin = -1500; 
-% uMax = 1500;
-% x0 = dataHandler.outputSeq(1);
-uMin = dataHandler.inputMin/inputScale-inputShift;
-uMax = dataHandler.inputMax/inputScale-inputShift;
-x0 = dataHandler.outputSeq(1)/outputScale-outputShift;
+% uMax =  1500;
+% x0 =-20;
+uMin = inputInvTrans(dataHandler.inputMin);
+uMax = inputInvTrans(dataHandler.inputMax);
+x0 = outputInvTrans(dataHandler.outputSeq(1));
 t0 = 0; tend = samplesPerCycle*cycles;
 uVec = [];
 for i=1:cycles
@@ -175,7 +225,7 @@ duVec = [0;diff(uVec)./diff(tVec)];
 % Parameters for fading triangular input
 % samples = 1000;
 % t0 = 0; tend = 60;
-% x0 = dataHandler.outputSeq(1);
+% x0 = outputInvTrans(dataHandler.outputSeq(1));
 % % peaks = [-3 2.8 -2.6 2.4 -2.2 2.0 -1.8 1.6 -1.4];
 % % peaks = [0 10 0 -10 0 8 0 -8 0 5 0 -5 0 3 0 -3 0];
 % peaks = [0 5 0 -5 0 3.741 0 -3.659 0 2.796 0 -2.812 0];

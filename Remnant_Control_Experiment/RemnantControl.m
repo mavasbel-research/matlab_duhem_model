@@ -2,13 +2,13 @@ close all
 clc
 
 % Paremeters
-K0 = 5.0;
+K0 = 100;
 inputMax = 1400;
 inputMin = -1400;
 remnantMax = 20;
 remnantMin = 0;
-inputSamples = 400;
-errorThreshold = 0.0001;
+inputSamples = 1000;
+errorThreshold = 0.001;
 iterationLimit = 1000;
 
 % Get scales if exist
@@ -22,12 +22,16 @@ if(exist('dataHandler','var'))
     inputShift = dataHandler.inputShift;
     outputShift = dataHandler.outputShift;
 end
+inputTrans = @(u) (u+inputShift)*inputScale;
+outputTrans = @(y) (y+outputShift)*outputScale;
+inputInvTrans  = @(u) u/inputScale-inputShift;
+outputInvTrans = @(y) y/outputScale-outputShift;
 
 % Control objective and initial pulse amp
 % Remnant max reachable: -0.33, Remnant min reachable: -0.83531
-ref = max([min([15, ...
+ref = max([min([18, ...
                 remnantMax]),remnantMin]);
-initialPulse = max([min([0.01, ...
+initialPulse = max([min([220, ...
                 inputMax]),inputMin]);
 
 disp(['Target Output: ', num2str(ref)])
@@ -45,8 +49,8 @@ lineWidth = 1.2;
 % Figure initialization
 fig = figure; axHandler = axes(); hold on;
 plot(axHandler,... % Plot original data
-    dataHandler.inputSeq/inputScale-inputShift,...
-    dataHandler.outputSeq/outputScale-outputShift,...
+    inputInvTrans(dataHandler.inputSeq),...
+    outputInvTrans(dataHandler.outputSeq),...
     '-g', ...
     'LineWidth', lineWidth,...
     'DisplayName','Experimental data');
@@ -56,6 +60,19 @@ plot(axHandler,... % Plot simulated data
     '-k', ...
     'LineWidth', lineWidth,...
     'DisplayName','Duhem model');
+if(exist('PsatPlus','var')) % Plot saturations
+    uSat = linspace(-3000,3000,3000);
+    plot(uSat,outputInvTrans(PsatPlus(inputTrans(uSat))),...
+        'Color','r',...
+        'LineWidth',1.2,...
+        'DisplayName','$P_{sat}^+$',...
+        'HandleVisibility','on');
+    plot(uSat,outputInvTrans(PsatMinus(inputTrans(uSat))),...
+        'Color','b',...
+        'LineWidth',1.2,...
+        'DisplayName','$P_{sat}^-$',...
+        'HandleVisibility','on');
+end
 for i=1:size(anHystCurves,2) % Plot anhysteresis curve
     lineHandler = plot(axHandler,...
         anHystCurves{i}(:,1),anHystCurves{i}(:,2),...
@@ -76,8 +93,7 @@ minHPad = 0.1; minVPad = 0.1;
 autoAdjust = false;
 
 % Loop Initialization
-x0 = 4  ;
-remnants = x0;
+remnants = 5;
 errors = ref-remnants;
 inputAmps = initialPulse;
 iter = 1;
@@ -112,8 +128,8 @@ leg = legend(...
     'Location','southeast');
 
 % Video initialization
-videoWriter = VideoWriter(videoName);
-open(videoWriter);
+% videoWriter = VideoWriter(videoName);
+% open(videoWriter);
 while(true)
     % Print iteration number
     disp('-------------------------')
@@ -156,8 +172,9 @@ while(true)
 %     elseif(iter==2)
 %     else
 %     end
-    K0 = 3;
-    inputAmps = [inputAmps, inputAmps(end)+K0*errors(end)];
+    deltaRemn = remnants(end)-remnants(end-1);
+%     K0 = sign(deltaRemn);
+    inputAmps = [inputAmps, inputAmps(end)+K0*errors(end)-K0*deltaRemn];
 
     % Print final output and error
     disp(['Final Output: ', num2str(remnants(end))])
@@ -182,14 +199,14 @@ while(true)
 end
 
 % Close video
-close(videoWriter);
+% close(videoWriter);
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % Function to generate input
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 function [signal, times] = generateInputSignal(pulseAmp, numSamples)
-    pointTimes = [0; 0.25; 0.5; 0.75; 1; 1.25;];
-    pointSignal = [0; pulseAmp; 0; 0; 0; 0];
+    pointTimes = [0; 0.5; 1.0];
+    pointSignal = [0; pulseAmp; 0];
     times = linspace(0, pointTimes(end), numSamples);
     signal = interp1(pointTimes, pointSignal, times);
     

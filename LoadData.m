@@ -63,24 +63,24 @@ fitFileHandlers = FileHandler.lookForFiles(lookupPaths, fitMatchFilter, skipFilt
 for fhCount=1:length(fitFileHandlers)
     disp('---------------------------------------------------------------');
     fitFileHandlers(fhCount).printInfo();
+    
     dataHandler = fitFileHandlers(fhCount).getPolarizationDataHandler();
+%     dataHandler = fitFileHandlers(fhCount).getStrainDataHandler();
     
     % Adjust data
-    scaleInput = 1;
-    scaleOutput = 1;
     dataHandler.resetOrigSequences();
     dataHandler.zeroMeanInput();
     dataHandler.zeroMeanOutput();
-    dataHandler.scaleInput(scaleInput);
-    dataHandler.scaleOutput(scaleOutput);
+    dataHandler.scaleInput(10);
+    dataHandler.scaleOutput(10);
 
     % Plot
     fitPlotter = FitPlotter();
-    fitPlotter.subfigInput(1:dataHandler.origSampleLength, dataHandler.origInputSeq, 'Original Input', 'r');
-    fitPlotter.subfigOutput(1:dataHandler.origSampleLength, dataHandler.origOutputSeq, 'Original Output', 'r');
+%     fitPlotter.subfigInput(1:dataHandler.origSampleLength, dataHandler.origInputSeq, 'Original Input', 'r');
+%     fitPlotter.subfigOutput(1:dataHandler.origSampleLength, dataHandler.origOutputSeq, 'Original Output', 'r');
+%     fitPlotter.figLoop(dataHandler.origInputSeq, dataHandler.origOutputSeq, 'Original data', 'r');
     fitPlotter.subfigInput(dataHandler.indexesSeq, dataHandler.inputSeq, 'Adjusted Input', 'b');
     fitPlotter.subfigOutput(dataHandler.indexesSeq, dataHandler.outputSeq, 'Adjusted Output', 'b');
-    fitPlotter.figLoop(dataHandler.origInputSeq, dataHandler.origOutputSeq, 'Original data', 'r');
     fitPlotter.figLoop(dataHandler.inputSeq, dataHandler.outputSeq, 'Adjusted data', 'b');
     drawnow;
 end
