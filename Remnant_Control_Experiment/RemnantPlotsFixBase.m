@@ -46,7 +46,7 @@ plotHandler = plot(dataHandlerSim.inputSeq, dataHandlerSim.outputSeq,...
     '-b','linewidth',lineWidth,...
     'DisplayName','Miller model'); hold on;
 xlim([-2200 2200])
-ylim([-35 80])
+ylim([-40 80])
 xticks([-2100 -1400 -700 0 700 1400 2100])
 % yticks([-600 -300 0 300 600 900 1200])
 xlabel('$V$','Interpreter','latex')
@@ -85,7 +85,7 @@ stem(linspace(0,iter,iter+1), amps(1:iter+1), ...
 % xlabel('$k$', 'Interpreter', 'Latex');
 ylabel('$w_k$', 'Interpreter', 'Latex');
 xlim([0,iter]);
-ylim([min(amps)-80, max(amps)+100]);
+ylim([-100, max(amps)+300]);
 
 subplot(3,1,2)
 stem(linspace(0,iter,iter+1), remnants(1:iter+1), ...
@@ -123,7 +123,7 @@ plot(linspace(0,iter-1,iter)+0.5, amps(1:iter),'or',...
 xlabel('$t$', 'Interpreter', 'Latex');
 ylabel('$u_\gamma$', 'Interpreter', 'Latex');
 xlim([0,iter+extraIter]);
-ylim([min(amps)-80, max(amps)+100]);
+ylim([-100, max(amps)+300]);
 
 subplot(3,1,2)
 plot(timeVals, xMatVals, '-b', 'LineWidth', lineWidth); hold on;

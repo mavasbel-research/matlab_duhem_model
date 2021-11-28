@@ -247,6 +247,9 @@ plot(0,remnantMin,'om','LineWidth',1.75,'markerSize',4)
 plot(0,remnantMax,'om','LineWidth',1.75,'markerSize',4)
 delete(expDataPlot)
 
+% Create data handler of loop
+dataHandlerSim = DataHandler([uBaseAsc;uBaseDesc],[xBaseAsc;xBaseDesc]);
+
 % Set control parameters
 ref = max([min([12, remnantMax]),remnantMin]);
 errorThreshold = 0.001;
