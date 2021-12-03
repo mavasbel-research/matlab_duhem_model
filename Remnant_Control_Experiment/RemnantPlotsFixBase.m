@@ -46,7 +46,7 @@ plotHandler = plot(dataHandlerSim.inputSeq, dataHandlerSim.outputSeq,...
     '-b','linewidth',lineWidth,...
     'DisplayName','Miller model'); hold on;
 xlim([-2200 2200])
-ylim([-40 80])
+ylim([-40 90])
 xticks([-2100 -1400 -700 0 700 1400 2100])
 % yticks([-600 -300 0 300 600 900 1200])
 xlabel('$V$','Interpreter','latex')
@@ -71,6 +71,11 @@ for i=1:size(anHystCurves,2) % Plot anhysteresis curve
         'DisplayName','Anhysteresis curve $\mathcal{A}$'); hold on;
     if(i>1) set(lineHandler,'handleVisibility','off'); end
 end
+plot(uBaseAsc,xBaseAsc,...
+    ':g',...
+    'LineWidth',1.75,...
+    'DisplayName','$\mathcal{Y}_{base}$',...
+    'HandleVisibility','on');
 
 leg = legend(...
     'Interpreter','latex',...
@@ -78,62 +83,71 @@ leg = legend(...
 
 %% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-figure
-subplot(3,1,1)
-stem(linspace(0,iter,iter+1), amps(1:iter+1), ...
-    '-b', 'LineWidth', lineWidth); hold on;
+% figure
+% subplot(3,1,1)
+% stem(linspace(0,iter,iter+1), amps(1:iter+1), ...
+%     '-b', 'LineWidth', lineWidth); hold on;
+% % xlabel('$k$', 'Interpreter', 'Latex');
+% ylabel('$w_k$', 'Interpreter', 'Latex');
+% xlim([0,iter]);
+% ylim([-100, max(amps)+300]);
+% 
+% subplot(3,1,2)
+% stem(linspace(0,iter,iter+1), remnants(1:iter+1), ...
+%     '-b', 'LineWidth', lineWidth); hold on;
+% plot(linspace(0,iter,1000), linspace(ref,ref,1000), ...
+%     '--k', 'LineWidth', lineWidth);
+% % xlabel('$k$', 'Interpreter', 'Latex');
+% ylabel('$\gamma(w_k,I_k)$', 'Interpreter', 'Latex');
+% xlim([0,iter]);
+% ylim([min(remnants)-2, max(remnants)+2]);
+% 
+% subplot(3,1,3)
+% stem(linspace(0,iter,iter+1), errors(1:iter+1), ...
+%     '-b', 'LineWidth', lineWidth); hold on;
 % xlabel('$k$', 'Interpreter', 'Latex');
-ylabel('$w_k$', 'Interpreter', 'Latex');
-xlim([0,iter]);
-ylim([-100, max(amps)+300]);
-
-subplot(3,1,2)
-stem(linspace(0,iter,iter+1), remnants(1:iter+1), ...
-    '-b', 'LineWidth', lineWidth); hold on;
-plot(linspace(0,iter,1000), linspace(ref,ref,1000), ...
-    '--k', 'LineWidth', lineWidth);
-% xlabel('$k$', 'Interpreter', 'Latex');
-ylabel('$\gamma(w_k,I_k)$', 'Interpreter', 'Latex');
-xlim([0,iter]);
-ylim([min(remnants)-2, max(remnants)+2]);
-
-subplot(3,1,3)
-stem(linspace(0,iter,iter+1), errors(1:iter+1), ...
-    '-b', 'LineWidth', lineWidth); hold on;
-xlabel('$k$', 'Interpreter', 'Latex');
-ylabel('$\varepsilon_k$', 'Interpreter', 'Latex');
-xlim([0,iter]);
-ylim([min(errors)-1, max(errors)+3]);
+% ylabel('$\varepsilon_k$', 'Interpreter', 'Latex');
+% xlim([0,iter]);
+% ylim([min(errors)-1, max(errors)+3]);
 
 %% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 extraIter = 2;
-timeVals = [linspace(0,(iter+extraIter),(iter+extraIter)*samples)]';
-inputVals = [reshape(uMat(:,1:iter),iter*samples,1);...
-    zeros(samples*extraIter,1)];
-xMatVals = [reshape(xMat(:,1:iter),iter*samples,1);...
-    xMat(end,iter)*ones(samples*extraIter,1)];
+timeVals = [linspace(0,(iter+extraIter),(iter+extraIter)*2*samples)]';
+inputVals = [reshape(uMat(:,1:2*iter),2*iter*samples,1);...
+    zeros(2*samples*extraIter,1)];
+xMatVals = [reshape(xMat(:,1:2*iter),2*iter*samples,1);...
+    xMat(end,2*iter)*ones(2*samples*extraIter,1)];
 
 figure
 subplot(3,1,1)
 plot(timeVals, inputVals, '-b', 'LineWidth', lineWidth); hold on;
-plot(linspace(0,iter-1,iter)+0.5, amps(1:iter),'or',...
+plot(linspace(0,iter-1,iter)+0.75, controlAmps(1:iter),'or',...
+    'LineWidth', lineWidth,...
+    'MarkerSize', markerSize-3);
+plot(linspace(0,iter-1,iter)+0.25, resetAmps(1:iter),'og',...
     'LineWidth', lineWidth,...
     'MarkerSize', markerSize-3);
 xlabel('$t$', 'Interpreter', 'Latex');
-ylabel('$u_\gamma$', 'Interpreter', 'Latex');
+ylabel('$u_\varsigma$', 'Interpreter', 'Latex');
 xlim([0,iter+extraIter]);
-ylim([-100, max(amps)+300]);
+ylim([min(resetAmps)-300, max(controlAmps)+300]);
 
 subplot(3,1,2)
 plot(timeVals, xMatVals, '-b', 'LineWidth', lineWidth); hold on;
-plot(linspace(0,iter+1,1000), linspace(ref,ref,1000), '--k', ...
+plot(linspace(0,iter+extraIter,1000), linspace(ref,ref,1000), '--k', ...
     'LineWidth', lineWidth);
 plot(linspace(0,iter,iter+1), remnants(1:iter+1),'or',...
     'LineWidth', lineWidth,...
     'MarkerSize', markerSize-3);
+plot(linspace(0,iter+extraIter,(iter+extraIter+1)*samples), remnantMin*ones(1,(iter+extraIter+1)*samples),':g',...
+    'LineWidth', lineWidth,...
+    'MarkerSize', markerSize-3);
+plot(linspace(0,iter,iter+1)-0.5, remnantMin*ones(1,iter+1),'og',...
+    'LineWidth', lineWidth,...
+    'MarkerSize', markerSize-3);
 xlabel('$t$', 'Interpreter', 'Latex');
-ylabel('$\mathcal{D}(u_\gamma,y_0)$', 'Interpreter', 'Latex');
+ylabel('$\mathcal{D}(u_\varsigma,y_0)$', 'Interpreter', 'Latex');
 xlim([0,iter+extraIter]);
 ylim([min(xMatVals)-2, max(xMatVals)+2]);
 

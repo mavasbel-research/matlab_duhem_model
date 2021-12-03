@@ -3,7 +3,7 @@
 close all
 % clc
 
-%% Get scales in case thy exists
+%% Get scales in case they exists
 inputScale = 1;
 outputScale = 1;
 inputShift = 0;
@@ -183,7 +183,7 @@ ylabel('$y$','Interpreter','latex');
 
 % Create animated plot handlers and invoke ode
 anLineHand = animatedline(axHandler,...
-    'LineWidth',1.2,...
+    'LineWidth',1.5,...
     'Color','black',...,
     'DisplayName','Duhem model',...
     'HandleVisibility','on');
@@ -215,7 +215,7 @@ odeOpts = odeset(odeOpts,...
         tVec,uVec,duVec,...
         autoAdjust,hPad,vPad,minHPad,minVPad,...
         anLineHand));
-xVec = 10;%outputInvTrans(dataHandler.outputSeq(1));
+xVec = -15;%outputInvTrans(dataHandler.outputSeq(1));
 for i=1:5
     [tVec,xVec] = ode113(@(tq,xq)odeModel(tq,xq,tVec,uVec,duVec),...
                         tVec,xVec(end),odeOpts);
@@ -255,24 +255,28 @@ ref = max([min([12, remnantMax]),remnantMin]);
 errorThreshold = 0.001;
 iterationLimit = 1000;
 
+plot(0,ref,'xm','LineWidth',1.75,'markerSize',7)
+
 %% Control loop
 
 % Loops
+iter = 1;
+gammaMin = remnantMin;
 remnants = remnantMin;
 errors = ref-remnants;
-amps = 500;
-iter = 1;
-uMat = [];
-xMat = [];
+resetAmps = 0;
+controlAmps = 500;
+uMat = zeros(samples,1);
+xMat = xVec(end)*ones(samples,1);
 clearpoints(anLineHand)
 while(true)
     % Print iteration number
     disp('-------------------------')
     disp(['Iteration: ', num2str(iter)])
-    disp(['Pulse Amplitude: ', num2str(amps(end))])
+    disp(['Pulse Amplitude: ', num2str(controlAmps(end))])
     
     % Ode solver
-    [uVec, duVec, tVec] = generatePulse(amps(end), samples);
+    [uVec, duVec, tVec] = generatePulse(controlAmps(end), samples);
     odeOpts = odeset(odeOpts,...
         'OutputFcn',@(tq,xq,flag)odeDrawing(tq,xq,flag,...
         tVec,uVec,duVec,...
@@ -322,11 +326,11 @@ while(true)
     xRes = interp1([wrev(uResDesc);uResAsc(2:end)],[wrev(xResDesc);xResAsc(2:end)],uBaseAsc);
     resetCurve = plot(axHandler,uBaseAsc,xRes,'--b','LineWidth',1.5);
     [~,idx] = min(abs(xRes(1:end/2)-xBaseAsc(1:end/2)));
-    resetAmp = uBaseAsc(idx);
-    disp(['Reset amp: ', num2str(resetAmp)])
+    resetAmps(end+1) = uBaseAsc(idx);
+    disp(['Reset amp: ', num2str(resetAmps(end))])
     
     % Apply reset
-    [uVec, duVec, tVec] = generatePulse(resetAmp, samples);
+    [uVec, duVec, tVec] = generatePulse(resetAmps(end), samples);
     odeOpts = odeset(odeOpts,...
         'OutputFcn',@(tq,xq,flag)odeDrawing(tq,xq,flag,...
         tVec,uVec,duVec,...
@@ -335,10 +339,12 @@ while(true)
     [tVec,xVec] = ode113(...
             @(tq,xq)odeModel(tq,xq,tVec,uVec,duVec),...
             tVec,remnants(end),odeOpts);
+    uMat = [uMat, uVec(:)];
+    xMat = [xMat, xVec(:)];
     delete(resetCurve)
     
     % Compute next amp and update iteration counter 
-    amps(end+1) = amps(end) + 25*errors(end);
+    controlAmps(end+1) = controlAmps(end) + 25*errors(end);
     iter = iter+1;
 end
 
@@ -372,7 +378,8 @@ function output = odeDrawing(tq,xq,flag,...
     if(autoAdjust)
         autoAdjustPlot(anLineHand,hPad,vPad,minHPad,minVPad);
     end
-    drawnow limitrate;
+%     drawnow limitrate;
+    drawnow 
     output = 0;
 end
 
