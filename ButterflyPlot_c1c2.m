@@ -14,7 +14,7 @@ xlim([xMin-xRange*xPad xMax+xRange*xPad]);
 ylim([yMin-yRange*yPad yMax+yRange*yPad]);
 
 % Distance function
-distanceFunc = @ButterflyUtils.verticalDistance;
+distanceFunc = @DuhemUtils.verticalDistance;
 
 % Test point
 % testPoint = [10,20];
@@ -50,7 +50,7 @@ end
 % legend();
 
 % Create simulink params
-run('./SimulinkCreateParams')
+% run('./SimulinkCreateParams')
 
 % Cycle to capture clics
 key = -1; capX=double([]); capY=double([]);

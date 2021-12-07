@@ -162,7 +162,7 @@ for i=1:size(descLims,1)
                         f2Params,params);
 end
 objSize = length(objFuncs);
-objFuncs{1+objSize} = @(params) params'*(0.01*eye(paramsLength))*params;
+objFuncs{1+objSize} = @(params) params'*(0.00005*eye(paramsLength))*params;
 % objFuncs{1+objSize} = @(params) params'*(0.1*diag([1,1,1,1,1,1]))*params;
 % objFuncs{2+objSize} = @(params) (params(1:paramsLength/2)-params(paramsLength/2+1:paramsLength))'...
 %                                *(0.1*eye(paramsLength/2))...
@@ -202,7 +202,7 @@ swarmOptions = optimoptions('particleswarm',...
 
 % Initial parameters
 % params0 = 5*rand(paramsLength,1)+2;
-params0 = [35;29;20]*10 + 10*rand(paramsLength,1);
+params0 = [35;29;20]*100 + 50*rand(paramsLength,1);
 % params0 = [35;29;20;35;29;20] + 5*rand(paramsLength,1);
 % params0 = [1897;1800;2000];
 % params0 = [1897;1800;2000;1897;1800;2000];

@@ -71,8 +71,8 @@ for fhCount=1:length(fitFileHandlers)
     dataHandler.resetOrigSequences();
     dataHandler.zeroMeanInput();
     dataHandler.zeroMeanOutput();
-    dataHandler.scaleInput(10);
-    dataHandler.scaleOutput(10);
+%     dataHandler.scaleInput(14);
+%     dataHandler.scaleOutput(10);
 
     % Plot
     fitPlotter = FitPlotter();

@@ -14,10 +14,15 @@ if(exist('dataHandler','var'))
     inputShift = dataHandler.inputShift;
     outputShift = dataHandler.outputShift;
 end
-inputTrans = @(u) (u+inputShift)*inputScale;
-outputTrans = @(y) (y+outputShift)*outputScale;
-inputInvTrans  = @(u) u/inputScale-inputShift;
-outputInvTrans = @(y) y/outputScale-outputShift;
+% inputTrans = @(u) (u+inputShift)*inputScale;
+% outputTrans = @(y) (y+outputShift)*outputScale;
+% inputInvTrans  = @(u) u/inputScale-inputShift;
+% outputInvTrans = @(y) y/outputScale-outputShift;
+
+inputTrans = @(u) (u)*inputScale;
+outputTrans = @(y) (y)*outputScale;
+inputInvTrans  = @(u) u/inputScale;
+outputInvTrans = @(y) y/outputScale;
 
 %% Miller model
 % Ps = 21; Pr = 14; Ec = 10;
@@ -158,12 +163,12 @@ end
 if(exist('PsatPlus','var')) % Plot saturations
     uSat = linspace(-3000,3000,3000);
     plot(uSat,outputInvTrans(PsatPlus(inputTrans(uSat))),...
-        'Color','r',...
+        '--r',...%'Color','r',...
         'LineWidth',1.2,...
         'DisplayName','$P_{sat}^+$',...
         'HandleVisibility','on');
     plot(uSat,outputInvTrans(PsatMinus(inputTrans(uSat))),...
-        'Color','b',...
+        '--b',...%'Color','--b',...
         'LineWidth',1.2,...
         'DisplayName','$P_{sat}^-$',...
         'HandleVisibility','on');
@@ -184,7 +189,7 @@ ylabel('$y$','Interpreter','latex');
 % Create animated plot handlers and invoke ode
 anLineHand = animatedline(axHandler,...
     'LineWidth',1.5,...
-    'Color','black',...,
+    'Color','b',...,
     'DisplayName','Duhem model',...
     'HandleVisibility','on');
 
@@ -251,23 +256,29 @@ delete(expDataPlot)
 dataHandlerSim = DataHandler([uBaseAsc;uBaseDesc],[xBaseAsc;xBaseDesc]);
 
 % Set control parameters
-ref = max([min([12, remnantMax]),remnantMin]);
+ref = max([min([6, remnantMax]),remnantMin]);
 errorThreshold = 0.001;
 iterationLimit = 1000;
 
 plot(0,ref,'xm','LineWidth',1.75,'markerSize',7)
 
 %% Control loop
+% Initial condition
+xVec(end) = -5;
 
 % Loops
-iter = 1;
-gammaMin = remnantMin;
-remnants = remnantMin;
-errors = ref-remnants;
-resetAmps = 0;
-controlAmps = 500;
-uMat = zeros(samples,1);
-xMat = xVec(end)*ones(samples,1);
+iter = 0;
+% kappa = 25;
+kappa = 30;
+errors = ref-xVec(end); 
+controlAmps = kappa*errors(end);
+resetAmps = [];
+remnants = [];
+
+% uMat = zeros(samples,1);
+% xMat = xVec(end)*ones(samples,1);
+uMat = [];
+xMat = [];
 clearpoints(anLineHand)
 while(true)
     % Print iteration number
@@ -275,7 +286,7 @@ while(true)
     disp(['Iteration: ', num2str(iter)])
     disp(['Pulse Amplitude: ', num2str(controlAmps(end))])
     
-    % Ode solver
+    % Apply control input
     [uVec, duVec, tVec] = generatePulse(controlAmps(end), samples);
     odeOpts = odeset(odeOpts,...
         'OutputFcn',@(tq,xq,flag)odeDrawing(tq,xq,flag,...
@@ -309,6 +320,10 @@ while(true)
         break
     end
     
+    % Compute next amp and update iteration counter 
+    controlAmps(end+1) = controlAmps(end) + kappa*errors(end);
+    iter = iter+1;
+    
     % Find reset curve and amplitude
     odeOpts = odeset(odeOpts,'OutputFcn',@(tq,xq,flag)0);
     tResAsc = linspace(0,1,samples)';
@@ -324,12 +339,14 @@ while(true)
             @(tq,xq)odeModel(tq,xq,tResDesc,uResDesc,duResDesc),...
             tResDesc,xVec(end),odeOpts);
     xRes = interp1([wrev(uResDesc);uResAsc(2:end)],[wrev(xResDesc);xResAsc(2:end)],uBaseAsc);
-    resetCurve = plot(axHandler,uBaseAsc,xRes,'--b','LineWidth',1.5);
+    resetCurve = plot(axHandler,uBaseAsc,xRes,'--m','LineWidth',1.5);
     [~,idx] = min(abs(xRes(1:end/2)-xBaseAsc(1:end/2)));
+    
+    % Store reset amp
     resetAmps(end+1) = uBaseAsc(idx);
     disp(['Reset amp: ', num2str(resetAmps(end))])
     
-    % Apply reset
+    % Apply reset input
     [uVec, duVec, tVec] = generatePulse(resetAmps(end), samples);
     odeOpts = odeset(odeOpts,...
         'OutputFcn',@(tq,xq,flag)odeDrawing(tq,xq,flag,...
@@ -338,14 +355,12 @@ while(true)
         anLineHand));
     [tVec,xVec] = ode113(...
             @(tq,xq)odeModel(tq,xq,tVec,uVec,duVec),...
-            tVec,remnants(end),odeOpts);
+            tVec,xVec(end),odeOpts);
+    delete(resetCurve);
+    
+    % Store simulation results
     uMat = [uMat, uVec(:)];
     xMat = [xMat, xVec(:)];
-    delete(resetCurve)
-    
-    % Compute next amp and update iteration counter 
-    controlAmps(end+1) = controlAmps(end) + 25*errors(end);
-    iter = iter+1;
 end
 
 %% Auxiliary functions
