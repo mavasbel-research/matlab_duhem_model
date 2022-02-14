@@ -3,6 +3,22 @@
 close all
 clc
 
+%% Get scales in case they exists
+inputScale = 1;
+outputScale = 1;
+inputShift = 0;
+outputShift = 0;
+if(exist('dataHandler','var'))
+    inputScale = dataHandler.inputScale;
+    outputScale = dataHandler.outputScale;
+    inputShift = dataHandler.inputShift;
+    outputShift = dataHandler.outputShift;
+end
+inputTrans = @(u) (u+inputShift)*inputScale;
+outputTrans = @(y) (y+outputShift)*outputScale;
+inputInvTrans  = @(u) u/inputScale-inputShift;
+outputInvTrans = @(y) y/outputScale-outputShift;
+
 %% Create model global parameters
 % Dahl parameters
 % dh_rho = 2;
@@ -48,87 +64,113 @@ clc
 % Create model
 duhemModel = DuhemModel(f1,f2);
 
-%% Create plots
+%% Create plot paramters and obtain anhysteresis curves
+figure; axHandler = axes(); hold on; % Create axes
 
-% Create plot paramters and obtain anhysteresis curves
-hPad = 0.1; vPad = 0.1; 
-minHPad = 0.1; minVPad = 0.1; 
-autoAdjust = true;
-% hGridSize = 500; hLims = [-1.0 1.0]*1; 
-% vGridSize = 500; vLims = [-1 5]*1;
-% hGridSize = 500; hLims = [-1.0 1.0]*6; 
-% vGridSize = 500; vLims = [-1.0 1.0]*6;
-% hGridSize = 500; hLims = [-1.0 1.0]*5.0; 
-% vGridSize = 500; vLims = [-8.0 10.0]*1.0;
-% hGridSize = 500; hLims = [-1.0 1.0]*13.0; 
-% vGridSize = 500; vLims = [-15.0 11.0]*1.0;
-% hGridSize = 500; hLims = [-1.0 1.0]*5.0;  
-% vGridSize = 500; vLims = [-11.0 6.0]*1.0;
-% hGridSize = 800; hLims = [-1.0 1.0]*10; 
-% vGridSize = 800; vLims = [-5.0 12.0]*1;
-% hGridSize = 800; hLims = [min([curve1(:,1);curve2(:,1)]),...
+% hPad = 0.1; vPad = 0.1; 
+% minHPad = 0.1; minVPad = 0.1; 
+% autoAdjust = true;
+% hGridSize = 500; hPlotLims = [-1.0 1.0]*1; 
+% vGridSize = 500; vPlotLims = [-1 5]*1;
+% hGridSize = 500; hPlotLims = [-1.0 1.0]*1; 
+% vGridSize = 500; vPlotLims = [-1 5]*1;
+% hGridSize = 500; hPlotLims = [-1.0 1.0]*6; 
+% vGridSize = 500; vPlotLims = [-1.0 1.0]*6;
+% hGridSize = 500; hPlotLims = [-1.0 1.0]*5.0; 
+% vGridSize = 500; vPlotLims = [-8.0 10.0]*1.0;
+% hGridSize = 500; hPlotLims = [-1.0 1.0]*13.0; 
+% vGridSize = 500; vPlotLims = [-15.0 11.0]*1.0;
+% hGridSize = 500; hPlotLims = [-1.0 1.0]*5.0;  
+% vGridSize = 500; vPlotLims = [-11.0 6.0]*1.0;
+% hGridSize = 800; hPlotLims = [-1.0 1.0]*10; 
+% vGridSize = 800; vPlotLims = [-5.0 12.0]*1;
+% hGridSize = 800; hPlotLims = [min([curve1(:,1);curve2(:,1)]),...
 %                                 max([curve1(:,1);curve2(:,1)])];
-% vGridSize = 800; vLims = [min([curve1(:,2);curve2(:,2)]),...
+% vGridSize = 800; vPlotLims = [min([curve1(:,2);curve2(:,2)]),...
 %                                 max([curve1(:,2);curve2(:,2)])];
-hRange = hLims(2)-hLims(1); vRange = vLims(2)-vLims(1);
+% hPlotRange = hPlotLims(2)-hPlotLims(1); vPlotRange = vPlotLims(2)-vPlotLims(1);
 % [anHystCurves, avgHystCurves] = ...
 %     DuhemModel.findAnhysteresisCurve(duhemModel,...
-%     [hLims(1)-hRange*hPad, hLims(2)+hRange*hPad],hGridSize,...
-%     [vLims(1)-vRange*vPad, vLims(2)+vRange*vPad],vGridSize);
+%     [hPlotLims(1)-hPlotRange*hPad, hPlotLims(2)+hPlotRange*hPad],hGridSize,...
+%     [vPlotLims(1)-vPlotRange*vPad, vPlotLims(2)+vPlotRange*vPad],vGridSize);
+% [anHystCurves, avgHystCurves] = ...
+%     DuhemModel.findAnhysteresisCurve(duhemModel,...
+%     [hPlotLims(1), hPlotLims(2)],hGridSize,...
+%     [vPlotLims(1), vPlotLims(2)],vGridSize);
+% 
+% axis([hPlotLims(1)-hPlotRange*hPad,hPlotLims(2)+hPlotRange*hPad,...
+%       vPlotLims(1)-vPlotRange*vPad,vPlotLims(2)+vPlotRange*vPad]);
+% xlabel('$u\ (Volts)$','Interpreter','latex');
+% ylabel('$y\ (nm)$','Interpreter','latex');
+
+%% Paramters for simulation with real data and data handler normalization
+autoAdjust = false;
+hGridSize = 1000; hLims = [-1.0 1.0]*12; 
+vGridSize = 1000; vLims = hLims;
+hPad = 0.1; vPad = 0.1; 
+minHPad = 0.1; minVPad = 0.1; 
+hPlotLims = [-1.0 1.0]*12; 
+vPlotLims = [-12 16]*1;
+hPlotRange = hPlotLims(2)-hPlotLims(1); vPlotRange = vPlotLims(2)-vPlotLims(1);
+axis([hPlotLims(1)-hPlotRange*hPad,hPlotLims(2)+hPlotRange*hPad,...
+      vPlotLims(1)-vPlotRange*vPad,vPlotLims(2)+vPlotRange*vPad]);
 [anHystCurves, avgHystCurves] = ...
     DuhemModel.findAnhysteresisCurve(duhemModel,...
-    [hLims(1), hLims(2)],hGridSize,...
-    [vLims(1), vLims(2)],vGridSize);
-figure; axHandler = axes(); hold on; % Create axes
+    [-10, 10],hGridSize,...
+    [vPlotLims(1)-vPlotRange*vPad, vPlotLims(2)+vPlotRange*vPad],vGridSize);
+
+axis([-1600,1600,-400,1700]);
+xticks([-2100 -1400 -700 0 700 1400 2100])
+yticks([-600 -300 0 300 600 900 1200 1500 1800])
+
+%% Plotting
 if(exist('curve1','var'))% Plot level f1=0
-    plot(axHandler,curve1(:,1),curve1(:,2),'r',...
+    plot(axHandler,inputInvTrans(curve1(:,1)),outputInvTrans(curve1(:,2)),'r',...
         'DisplayName','$c_1(\upsilon)$'); hold on;
 end
 if(exist('curve2','var'))% Plot level f2=0
-    plot(axHandler,curve2(:,1),curve2(:,2),'b',...
+    plot(axHandler,inputInvTrans(curve2(:,1)),outputInvTrans(curve2(:,2)),'b',...
         'DisplayName','$c_2(\upsilon)$'); hold on;
 end
 for i=1:size(anHystCurves,2) % Plot anhysteresis curve
     lineHandler = plot(axHandler,...
-        anHystCurves{i}(:,1),anHystCurves{i}(:,2),...
+        inputInvTrans(anHystCurves{i}(:,1)),outputInvTrans(anHystCurves{i}(:,2)),...
         'Color','k',...
         'LineWidth',1.0,...
         'LineStyle','--',...
         'DisplayName','Anhysteresis curve $\mathcal{A}$'); hold on;
     if(i>1) set(lineHandler,'handleVisibility','off'); end
 end
-for i=1:size(avgHystCurves,2) % Plot average curve
-    lineHandler = plot(axHandler,...
-        avgHystCurves{i}(:,1),avgHystCurves{i}(:,2),...
-        'color','m',...
-        'DisplayName','$f_1+f_2=0$'); hold on;
-    if(i>1) set(lineHandler,'handleVisibility','off'); end
-end
+% for i=1:size(avgHystCurves,2) % Plot average curve
+%     lineHandler = plot(axHandler,...
+%         avgHystCurves{i}(:,1),avgHystCurves{i}(:,2),...
+%         'color','m',...
+%         'DisplayName','$f_1+f_2=0$'); hold on;
+%     if(i>1) set(lineHandler,'handleVisibility','off'); end
+% end
 if(exist('dataHandler','var'))
 %     dataHandler = DataHandler(uVec,xTime);
-    plot(axHandler,dataHandler.inputSeq,dataHandler.outputSeq,'g',...
+    plot(axHandler,inputInvTrans(dataHandler.inputSeq),outputInvTrans(dataHandler.outputSeq),'g',...
         'lineWidth',1.2,...
         'DisplayName','Experimental Data');
 end
-axis([hLims(1)-hRange*hPad,hLims(2)+hRange*hPad,...
-      vLims(1)-vRange*vPad,vLims(2)+vRange*vPad]);
-xlabel('$u$','Interpreter','latex');
-ylabel('$y$','Interpreter','latex');
 
 %%  Input creation
 
 % Simulation parameters for periodic input
 samplesPerCycle = 150; 
-cycles = 10;
+cycles = 2;
 % uMin = -12; 
 % uMax =  12;
 % x0 = 0.5;
-uMin = -10; 
-uMax =  10;
+% uMin = -10; 
+% uMax =  10;
+uMin = dataHandler.inputMin*0.98; 
+uMax = dataHandler.inputMax*0.98;
 x0 = dataHandler.outputSeq(1);
 % uMin = -10; 
 % uMax =  10; 
-t0 = 0; tend = 5*cycles;
+t0 = 0; tend = 1*cycles;
 uVec = [];
 for i=1:cycles
     uVec = [uVec;linspace(uMax,uMin,samplesPerCycle)'];
@@ -168,6 +210,7 @@ odeOutFunc = @(tq,xq,flag)odeDrawing(...
     tq,xq,flag,...
     tVec,uVec,duVec,...
     autoAdjust,hPad,vPad,minHPad,minVPad,...
+    inputTrans,outputTrans,inputInvTrans,outputInvTrans,...
     anLineHand);
 [tTime,xTime] = ode113(...
     @(tq,xq)odeModel(tq,xq,tVec,uVec,duVec),...
@@ -183,6 +226,9 @@ odeOutFunc = @(tq,xq,flag)odeDrawing(...
 
 % Create data handler for fitting test
 % dataHandler = DataHandler(uVec, xTime, tTime);
+
+% Create data handler with simulation data
+dataHandlerSim = DataHandler(uVec, xTime, tTime);
 
 % Mark initial and final
 plot(uVec(1),xTime(1),'o',...
@@ -207,15 +253,16 @@ leg = legend(...
 function output = odeDrawing(tq,xq,flag,...
     tVec,uVec,duVec,...
     autoAdjust,hPad,vPad,minHPad,minVPad,...
+    inputTrans,outputTrans,inputInvTrans,outputInvTrans,...
     anLineHand)
 
     if strcmp(flag,'init')
         [uq,duq] = odeuVecduVecSolver(tq(1),tVec,uVec,duVec);
-        addpoints(anLineHand,uq,xq(1,:));
+        addpoints(anLineHand,inputInvTrans(uq),outputInvTrans(xq(1,:)));
     elseif strcmp(flag,'done')
     else
         [uq,duq] = odeuVecduVecSolver(tq,tVec,uVec,duVec);
-        addpoints(anLineHand,uq,xq);
+        addpoints(anLineHand,inputInvTrans(uq),outputInvTrans(xq));
     end
     if(autoAdjust)
         autoAdjustPlot(anLineHand,hPad,vPad,minHPad,minVPad);

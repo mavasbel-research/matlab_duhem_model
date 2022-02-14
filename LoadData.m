@@ -64,15 +64,15 @@ for fhCount=1:length(fitFileHandlers)
     disp('---------------------------------------------------------------');
     fitFileHandlers(fhCount).printInfo();
     
-    dataHandler = fitFileHandlers(fhCount).getPolarizationDataHandler();
-%     dataHandler = fitFileHandlers(fhCount).getStrainDataHandler();
+%     dataHandler = fitFileHandlers(fhCount).getPolarizationDataHandler();
+    dataHandler = fitFileHandlers(fhCount).getStrainDataHandler();
     
     % Adjust data
     dataHandler.resetOrigSequences();
     dataHandler.zeroMeanInput();
     dataHandler.zeroMeanOutput();
-%     dataHandler.scaleInput(14);
-%     dataHandler.scaleOutput(10);
+    dataHandler.scaleInput(10);
+    dataHandler.scaleOutput(10);
 
     % Plot
     fitPlotter = FitPlotter();
